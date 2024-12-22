@@ -8,8 +8,8 @@ Todo
 - [x] figure out directional light strength calculation (normals)
 - [x] ensure that lighting is correct (rgb color accuracy and light strength stuff)
 - [x] figure out why texture is unstable = [blend mode alpha blend makes it unstable]
-- [;] ambient color [disable in sidebar]
-- [;] directional light [disable in sidebar]
+- [x] ambient color
+- [x] directional light
 - [;] global variables [panel control]
 - [ ] translucency
 - [ ] global overrides
@@ -35,3 +35,4 @@ Later
 - object pointers for shader data? (directional light object, ambient light object, fog object, etc.)
 - smooth shading toggle?
 - consider the fact that most color features can not make the original brighter
+- automatic vertex color tool based on configuration (ambient occlusion, light source, shadows)
