@@ -105,12 +105,12 @@ def create_4b_material(obj):
     return material
 
 
-def reset_material(context, material):
+def update_material(context, material):
     nodes = material.node_tree.nodes
 
     for i in ["0, 0", "0, 1", "1, 0", "1, 1"]:
         texture = nodes[f"Texture {i}"]
-        texture.image = context.scene.props.texture
+        texture.image = context.scene.props.texture if not context.scene.props.enable_solid_color else None
 
     filter_settings = nodes["Bilinear UV"]
     filter_inputs = filter_settings.inputs
@@ -134,8 +134,7 @@ def reset_material(context, material):
     shader_settings = nodes["Shader"]
     shader_inputs = shader_settings.inputs
 
-    shader_inputs["Enable Transparency"].default_value = (context.scene.props.transparency_mode != "opaque" and
-                                                          not context.scene.props.enable_solid_color)
+    shader_inputs["Enable Transparency"].default_value = context.scene.props.transparency_mode != "opaque"
 
     transparency_mode_to_blend_method = {
         "opaque": "OPAQUE",
@@ -146,6 +145,8 @@ def reset_material(context, material):
     material.blend_method = transparency_mode_to_blend_method[context.scene.props.transparency_mode]
 
     material.use_backface_culling = context.scene.props.enable_backface_culling
+
+    shader_inputs["Translucency"].default_value = context.scene.props.translucency
 
     shader_inputs["Solid Color"].default_value = context.scene.props.solid_color
 
@@ -175,13 +176,13 @@ class Create4BMaterial(bpy.types.Operator):
             self.report({"ERROR"}, "No active object selected.")
         else:
             material = create_4b_material(obj)
-            reset_material(context, material)
+            update_material(context, material)
             self.report({"INFO"}, "Created new 4B material.")
         return {"FINISHED"}
 
 
 def update(_self, context):
-    reset_material(context, context.material)
+    update_material(context, context.material)
 
 
 class Props(bpy.types.PropertyGroup):
@@ -205,6 +206,9 @@ class Props(bpy.types.PropertyGroup):
 
     transparency_mode: bpy.props.EnumProperty(name="Transparency Mode", items=transparency_options, default="opaque",
                                               update=update)
+
+    translucency: bpy.props.FloatProperty(name="Translucency", min=0, max=1, step=1, update=update)
+
     enable_backface_culling: bpy.props.BoolProperty(name="Enable Backface Culling", default=True, update=update)
 
     enable_solid_color: bpy.props.BoolProperty(name="Enable Solid Color", default=False, update=update)
@@ -269,10 +273,12 @@ class Panel(bpy.types.Panel):
         box.prop(props, "x_bounds")
         box.prop(props, "y_bounds")
 
-        box.prop(props, "transparency_mode")
-
+        layout.label(text="Transparency Mode")
+        layout.prop(props, "transparency_mode", expand=True)
 
         layout.prop(props, "enable_backface_culling")
+
+        layout.prop(props, "translucency", slider=True)
 
         split = layout.split()
         col = split.column()
