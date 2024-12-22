@@ -11,7 +11,7 @@ Todo
 - [x] ambient color
 - [x] directional light
 - [x] translucency
-- [;] global variables [panel control]
+- [x] global variables
 - [ ] global overrides
 - [ ] set defaults for globals
 - [ ] reset sidebar options to default when creating new material

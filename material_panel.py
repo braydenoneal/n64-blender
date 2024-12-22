@@ -2,6 +2,8 @@ import os
 
 import bpy
 
+from .globals_panel import update_globals_node_group
+
 
 def link_4b_material_library():
     # TODO: Development only
@@ -47,11 +49,7 @@ def create_globals_node_group():
     interface.new_socket("Light Color", socket_type="NodeSocketColor", in_out="OUTPUT")
     interface.new_socket("Light Direction", socket_type="NodeSocketVector", in_out="OUTPUT")
 
-    # Set outputs from render settings
-    # sceneOutputs: NodeGroupOutput = group.nodes["Group Output"]
-    # renderSettings: "Fast64RenderSettings_Properties" = bpy.context.scene.fast64.renderSettings
-    #
-    # update_scene_props_from_render_settings(sceneOutputs, renderSettings)
+    update_globals_node_group()
 
 
 def create_globals(material):
