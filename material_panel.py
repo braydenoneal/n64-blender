@@ -1,13 +1,3 @@
-bl_info = {
-    "name": "4B Materials",
-    "author": "Brayden O'Neal",
-    "version": (0, 0, 0),
-    "blender": (2, 80, 0),
-    "location": "Properties > Material > 4B Material",
-    "description": "4B Materials (borrowing heavily from Fast64)",
-    "category": "Material",
-}
-
 import os
 
 import bpy
@@ -107,25 +97,26 @@ def create_4b_material(obj):
 
 def update_material(context, material):
     nodes = material.node_tree.nodes
+    props = context.material.props_4b
 
     for i in ["0, 0", "0, 1", "1, 0", "1, 1"]:
         texture = nodes[f"Texture {i}"]
-        texture.image = context.scene.props.texture if not context.scene.props.enable_solid_color else None
+        texture.image = props.texture if not props.enable_solid_color else None
 
     filter_settings = nodes["Bilinear UV"]
     filter_inputs = filter_settings.inputs
 
-    width, height = context.scene.props.texture.size
-    filter_inputs["Width"].default_value = width
-    filter_inputs["Height"].default_value = height
+    width, height = props.texture.size
+    filter_inputs["Width"].default_value = width if not props.enable_solid_color else 0
+    filter_inputs["Height"].default_value = height if not props.enable_solid_color else 0
 
-    x_bounds = context.scene.props.x_bounds
+    x_bounds = props.x_bounds
 
     filter_inputs["Clamp X"].default_value = x_bounds == "extend"
     filter_inputs["Repeat X"].default_value = x_bounds == "repeat"
     filter_inputs["Mirror X"].default_value = x_bounds == "mirror"
 
-    y_bounds = context.scene.props.y_bounds
+    y_bounds = props.y_bounds
 
     filter_inputs["Clamp Y"].default_value = y_bounds == "extend"
     filter_inputs["Repeat Y"].default_value = y_bounds == "repeat"
@@ -134,7 +125,7 @@ def update_material(context, material):
     shader_settings = nodes["Shader"]
     shader_inputs = shader_settings.inputs
 
-    shader_inputs["Enable Transparency"].default_value = context.scene.props.transparency_mode != "opaque"
+    shader_inputs["Enable Transparency"].default_value = props.transparency_mode != "opaque"
 
     transparency_mode_to_blend_method = {
         "opaque": "OPAQUE",
@@ -142,27 +133,27 @@ def update_material(context, material):
         "transparent": "BLEND"
     }
 
-    material.blend_method = transparency_mode_to_blend_method[context.scene.props.transparency_mode]
+    material.blend_method = transparency_mode_to_blend_method[props.transparency_mode]
 
-    material.use_backface_culling = context.scene.props.enable_backface_culling
+    material.use_backface_culling = props.enable_backface_culling
 
-    shader_inputs["Translucency"].default_value = context.scene.props.translucency
+    shader_inputs["Translucency"].default_value = props.translucency
 
-    shader_inputs["Solid Color"].default_value = context.scene.props.solid_color
+    shader_inputs["Solid Color"].default_value = props.solid_color
 
-    shader_inputs["Enable Solid Color"].default_value = context.scene.props.enable_solid_color
+    shader_inputs["Enable Solid Color"].default_value = props.enable_solid_color
 
-    shader_inputs["Enable Vertex Colors"].default_value = context.scene.props.enable_vertex_colors
+    shader_inputs["Enable Vertex Colors"].default_value = props.enable_vertex_colors
 
-    shader_inputs["Overlay Color"].default_value = context.scene.props.overlay_color
+    shader_inputs["Overlay Color"].default_value = props.overlay_color
 
-    shader_inputs["Enable Overlay Color"].default_value = context.scene.props.enable_overlay_color
+    shader_inputs["Enable Overlay Color"].default_value = props.enable_overlay_color
 
-    shader_inputs["Enable Ambient Color"].default_value = context.scene.props.enable_ambient_color
+    shader_inputs["Enable Ambient Color"].default_value = props.enable_ambient_color
 
-    shader_inputs["Enable Light Color"].default_value = context.scene.props.enable_light_color
+    shader_inputs["Enable Light Color"].default_value = props.enable_light_color
 
-    shader_inputs["Enable Fog"].default_value = context.scene.props.enable_fog
+    shader_inputs["Enable Fog"].default_value = props.enable_fog
 
 
 class Create4BMaterial(bpy.types.Operator):
@@ -244,14 +235,14 @@ class Props(bpy.types.PropertyGroup):
 
 class Panel(bpy.types.Panel):
     bl_label = "4B Material"
-    bl_idname = "MATERIAL_PT_4B_Inspector"
+    bl_idname = "MATERIAL_PT_4B_INSPECTOR"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "material"
 
     def draw(self, context):
         layout = self.layout
-        props = context.scene.props
+        props = context.material.props_4b
 
         layout.operator(Create4BMaterial.bl_idname)
 
@@ -287,7 +278,6 @@ class Panel(bpy.types.Panel):
             col = split.column()
             col.prop(props, "solid_color", text="")
 
-
         layout.prop(props, "enable_vertex_colors")
 
         split = layout.split()
@@ -309,7 +299,7 @@ def register():
     bpy.utils.register_class(Panel)
     bpy.utils.register_class(Props)
     bpy.utils.register_class(Create4BMaterial)
-    bpy.types.Scene.props = bpy.props.PointerProperty(type=Props)
+    bpy.types.Material.props_4b = bpy.props.PointerProperty(type=Props)
 
 
 def unregister():
@@ -317,8 +307,4 @@ def unregister():
     bpy.utils.unregister_class(Panel)
     bpy.utils.unregister_class(Props)
     bpy.utils.unregister_class(Create4BMaterial)
-    del bpy.types.Scene.props
-
-
-if __name__ == "__main__":
-    register()
+    del bpy.types.Material.props_4b
