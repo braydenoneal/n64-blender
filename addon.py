@@ -255,29 +255,41 @@ class Panel(bpy.types.Panel):
             layout.label(text="This is not a 4B material.")
             return
 
-        if not props.enable_solid_color:
-            layout.template_ID(props, "texture", open="image.open", new="image.new")
+        box = layout.box()
+        box.enabled = not props.enable_solid_color
 
-            if props.texture is not None:
-                width, height = props.texture.size
-                layout.label(text=f"Size: {width}x{height}")
+        box.template_ID(props, "texture", open="image.open", new="image.new")
 
-            layout.prop(props, "x_bounds")
-            layout.prop(props, "y_bounds")
+        if props.texture is not None:
+            width, height = props.texture.size
+            box.label(text=f"Size: {width}x{height}")
+        else:
+            box.label(text="")
 
-            layout.prop(props, "transparency_mode")
+        box.prop(props, "x_bounds")
+        box.prop(props, "y_bounds")
+
+        box.prop(props, "transparency_mode")
+
 
         layout.prop(props, "enable_backface_culling")
 
-        layout.prop(props, "enable_solid_color")
+        split = layout.split()
+        col = split.column()
+        col.prop(props, "enable_solid_color")
         if props.enable_solid_color:
-            layout.prop(props, "solid_color")
+            col = split.column()
+            col.prop(props, "solid_color", text="")
+
 
         layout.prop(props, "enable_vertex_colors")
 
-        layout.prop(props, "enable_overlay_color")
+        split = layout.split()
+        col = split.column()
+        col.prop(props, "enable_overlay_color")
         if props.enable_overlay_color:
-            layout.prop(props, "overlay_color")
+            col = split.column()
+            col.prop(props, "overlay_color", text="")
 
         layout.prop(props, "enable_ambient_color")
 
