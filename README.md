@@ -8,9 +8,9 @@ Todo
 - [x] figure out directional light strength calculation (normals)
 - [x] ensure that lighting is correct (rgb color accuracy and light strength stuff)
 - [x] figure out why texture is unstable = [blend mode alpha blend makes it unstable]
-- [;] global variables [panel control]
 - [;] ambient color [disable in sidebar]
 - [;] directional light [disable in sidebar]
+- [;] global variables [panel control]
 - [ ] translucency
 - [ ] global overrides
 - [ ] set defaults for globals
@@ -27,10 +27,11 @@ Todo
 
 Later
 -----
-particles
-collision
-object placement
-fix fog edge artifacts
-object pointers for shader data? (directional light object, ambient light object, fog object, etc.)
-smooth shading toggle?
-consider the fact that most color features can not make the original brighter
+
+- particles
+- collision
+- object placement
+- fix fog edge artifacts
+- object pointers for shader data? (directional light object, ambient light object, fog object, etc.)
+- smooth shading toggle?
+- consider the fact that most color features can not make the original brighter
