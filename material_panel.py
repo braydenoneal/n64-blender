@@ -95,9 +95,9 @@ def create_4b_material(obj):
     return material
 
 
-def update_material(context, material):
+def update_material(material):
     nodes = material.node_tree.nodes
-    props = context.material.props_4b
+    props = material.props_4b
 
     for i in ["0, 0", "0, 1", "1, 0", "1, 1"]:
         texture = nodes[f"Texture {i}"]
@@ -106,9 +106,13 @@ def update_material(context, material):
     filter_settings = nodes["Bilinear UV"]
     filter_inputs = filter_settings.inputs
 
-    width, height = props.texture.size
-    filter_inputs["Width"].default_value = width if not props.enable_solid_color else 0
-    filter_inputs["Height"].default_value = height if not props.enable_solid_color else 0
+    if props.texture and not props.enable_solid_color:
+        width, height = props.texture.size
+        filter_inputs["Width"].default_value = width
+        filter_inputs["Height"].default_value = height
+    else:
+        filter_inputs["Width"].default_value = 0
+        filter_inputs["Height"].default_value = 0
 
     x_bounds = props.x_bounds
 
@@ -161,19 +165,19 @@ class Create4BMaterial(bpy.types.Operator):
     bl_label = "Create 4B Material"
     bl_options = {"REGISTER", "UNDO", "PRESET"}
 
-    def execute(self, context):
+    def execute(self, _context):
         obj = bpy.context.view_layer.objects.active
         if obj is None:
             self.report({"ERROR"}, "No active object selected.")
         else:
             material = create_4b_material(obj)
-            update_material(context, material)
+            update_material(material)
             self.report({"INFO"}, "Created new 4B material.")
         return {"FINISHED"}
 
 
 def update(_self, context):
-    update_material(context, context.material)
+    update_material(context.material)
 
 
 class Props(bpy.types.PropertyGroup):
@@ -242,13 +246,14 @@ class Panel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        props = context.material.props_4b
 
         layout.operator(Create4BMaterial.bl_idname)
 
         if not context.material or not context.material.is_4b:
             layout.label(text="This is not a 4B material.")
             return
+
+        props = context.material.props_4b
 
         box = layout.box()
         box.enabled = not props.enable_solid_color
