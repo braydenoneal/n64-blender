@@ -215,7 +215,9 @@ class Props(bpy.types.PropertyGroup):
     transparency_mode: bpy.props.EnumProperty(name="Transparency Mode", items=transparency_options, default="opaque",
                                               update=update)
 
-    translucency: bpy.props.FloatProperty(name="Translucency", min=0, max=1, step=1, update=update)
+    translucency: bpy.props.FloatProperty(name="Translucency",
+                                          description="How much light passes through. 0 is fully opaque and 1 is fully transparent. Transparency mode must be set to \"Transparent\"",
+                                          min=0, max=1, step=1, update=update)
 
     enable_backface_culling: bpy.props.BoolProperty(name="Enable Backface Culling", default=True, update=update)
 
@@ -297,7 +299,10 @@ class Panel(bpy.types.Panel):
 
         layout.operator(Create4BMaterial.bl_idname)
 
-        if not context.material or not context.material.is_4b:
+        if not context.material:
+            return
+
+        if not context.material.is_4b:
             layout.label(text="This is not a 4B material.")
             return
 
@@ -312,17 +317,10 @@ class Panel(bpy.types.Panel):
             width, height = props.texture.size
             box.label(text=f"Size: {width}x{height}")
         else:
-            box.label(text="")
+            box.label(text="Size:")
 
         box.prop(props, "x_bounds")
         box.prop(props, "y_bounds")
-
-        layout.label(text="Transparency Mode")
-        layout.prop(props, "transparency_mode", expand=True)
-
-        layout.prop(props, "enable_backface_culling")
-
-        layout.prop(props, "translucency", slider=True)
 
         split = layout.split()
         col = split.column()
@@ -330,6 +328,17 @@ class Panel(bpy.types.Panel):
         col = split.column()
         col.enabled = props.enable_solid_color
         col.prop(props, "solid_color", text="")
+
+        box = layout.box()
+
+        box.label(text="Transparency Mode")
+        box.prop(props, "transparency_mode", expand=True)
+
+        box.prop(props, "enable_backface_culling")
+
+        row = box.row()
+        row.enabled = props.transparency_mode == "transparent"
+        row.prop(props, "translucency", slider=True)
 
         layout.prop(props, "enable_vertex_colors")
 
@@ -340,8 +349,10 @@ class Panel(bpy.types.Panel):
         col.enabled = props.enable_overlay_color
         col.prop(props, "overlay_color", text="")
 
-        layout.prop(props, "enable_ambient_color")
-        split = layout.split()
+        box = layout.box()
+
+        box.prop(props, "enable_ambient_color")
+        split = box.split()
         split.enabled = props.enable_ambient_color
         col = split.column()
         col.prop(props, "override_ambient_color")
@@ -349,30 +360,34 @@ class Panel(bpy.types.Panel):
         col.enabled = props.override_ambient_color
         col.prop(props, "ambient_color", text="")
 
-        layout.prop(props, "enable_light_color")
-        split = layout.split()
+        box = layout.box()
+
+        box.prop(props, "enable_light_color")
+        split = box.split()
         split.enabled = props.enable_light_color
         col = split.column()
         col.prop(props, "override_light_color")
         col = split.column()
         col.enabled = props.override_light_color
         col.prop(props, "light_color", text="")
-        row = layout.row()
+        row = box.row()
         row.enabled = props.override_light_color and props.enable_light_color
         row.prop(props, "light_direction", text="")
 
-        layout.prop(props, "enable_fog")
-        split = layout.split()
+        box = layout.box()
+
+        box.prop(props, "enable_fog")
+        split = box.split()
         split.enabled = props.enable_fog
         col = split.column()
         col.prop(props, "override_fog")
         col = split.column()
         col.enabled = props.override_fog
         col.prop(props, "fog_color", text="")
-        row = layout.row()
+        row = box.row()
         row.enabled = props.override_fog and props.enable_fog
         row.prop(props, "fog_start")
-        row = layout.row()
+        row = box.row()
         row.enabled = props.override_fog and props.enable_fog
         row.prop(props, "fog_length")
 
