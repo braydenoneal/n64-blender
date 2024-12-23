@@ -12,9 +12,9 @@ Todo
 - [x] directional light
 - [x] translucency
 - [x] global variables
+- [x] set defaults for globals
+- [x] reset sidebar options to default when creating new material
 - [ ] global overrides
-- [ ] set defaults for globals
-- [ ] reset sidebar options to default when creating new material
 - [ ] world space light direction toggle
 - [ ] post-processing: horizontal blur and large antialiasing
 - [ ] skybox
@@ -24,6 +24,7 @@ Todo
 - [ ] texture scroll
 - [ ] texture animation
 - [ ] color masked textures? (think colored bundles)
+- [ ] global toggles (disable fog, etc. globally)
 
 Later
 -----
