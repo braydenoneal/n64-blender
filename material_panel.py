@@ -153,17 +153,25 @@ def update_material(material):
 
     shader_inputs["Enable Light Color"].default_value = props.enable_light_color
 
-    shader_inputs["Override Ambient Color"].default_value = props.override_ambient_color
+    shader_inputs["Override Ambient Color"].default_value = props.ambient_color
 
-    shader_inputs["Enable Override Ambient Color"].default_value = props.enable_override_ambient_color
+    shader_inputs["Enable Override Ambient Color"].default_value = props.override_ambient_color
 
-    shader_inputs["Override Light Color"].default_value = props.override_light_color
+    shader_inputs["Override Light Color"].default_value = props.light_color
 
-    shader_inputs["Override Light Direction"].default_value = props.override_light_direction
+    shader_inputs["Override Light Direction"].default_value = props.light_direction
 
-    shader_inputs["Enable Override Light Color"].default_value = props.enable_override_light_color
+    shader_inputs["Enable Override Light Color"].default_value = props.override_light_color
 
     shader_inputs["Enable Fog"].default_value = props.enable_fog
+
+    shader_inputs["Override Fog Start"].default_value = props.fog_start
+
+    shader_inputs["Override Fog Length"].default_value = props.fog_length
+
+    shader_inputs["Override Fog Color"].default_value = props.fog_color
+
+    shader_inputs["Enable Override Fog"].default_value = props.override_fog
 
 
 class Create4BMaterial(bpy.types.Operator):
@@ -234,9 +242,8 @@ class Props(bpy.types.PropertyGroup):
     )
 
     enable_ambient_color: bpy.props.BoolProperty(name="Enable Ambient Color", default=True, update=update)
-
-    enable_override_ambient_color: bpy.props.BoolProperty(name="Override Ambient Color", default=False, update=update)
-    override_ambient_color: bpy.props.FloatVectorProperty(
+    override_ambient_color: bpy.props.BoolProperty(name="Override Ambient Color", default=False, update=update)
+    ambient_color: bpy.props.FloatVectorProperty(
         subtype="COLOR",
         size=4,
         min=0,
@@ -246,9 +253,8 @@ class Props(bpy.types.PropertyGroup):
     )
 
     enable_light_color: bpy.props.BoolProperty(name="Enable Light Color", default=True, update=update)
-
-    enable_override_light_color: bpy.props.BoolProperty(name="Override Light Color", default=False, update=update)
-    override_light_color: bpy.props.FloatVectorProperty(
+    override_light_color: bpy.props.BoolProperty(name="Override Light Color", default=False, update=update)
+    light_color: bpy.props.FloatVectorProperty(
         subtype="COLOR",
         size=4,
         min=0,
@@ -256,7 +262,7 @@ class Props(bpy.types.PropertyGroup):
         default=(1, 1, 1, 1),
         update=update
     )
-    override_light_direction: bpy.props.FloatVectorProperty(
+    light_direction: bpy.props.FloatVectorProperty(
         size=3,
         min=-1,
         max=1,
@@ -265,6 +271,18 @@ class Props(bpy.types.PropertyGroup):
     )
 
     enable_fog: bpy.props.BoolProperty(name="Enable Fog", default=True, update=update)
+    override_fog: bpy.props.BoolProperty(name="Override Fog", default=False, update=update)
+    fog_start: bpy.props.FloatProperty(name="Fog Start", min=0, step=100, default=16, update=update)
+    fog_length: bpy.props.FloatProperty(name="Fog Length", min=0, step=100, default=32, update=update)
+    fog_color: bpy.props.FloatVectorProperty(
+        name="Fog Color",
+        subtype="COLOR",
+        size=4,
+        min=0,
+        max=1,
+        default=(1, 1, 1, 1),
+        update=update
+    )
 
 
 class Panel(bpy.types.Panel):
@@ -323,27 +341,40 @@ class Panel(bpy.types.Panel):
         col.prop(props, "overlay_color", text="")
 
         layout.prop(props, "enable_ambient_color")
-
         split = layout.split()
+        split.enabled = props.enable_ambient_color
         col = split.column()
-        col.prop(props, "enable_override_ambient_color")
+        col.prop(props, "override_ambient_color")
         col = split.column()
-        col.enabled = props.enable_override_ambient_color
-        col.prop(props, "override_ambient_color", text="")
+        col.enabled = props.override_ambient_color
+        col.prop(props, "ambient_color", text="")
 
         layout.prop(props, "enable_light_color")
-
         split = layout.split()
+        split.enabled = props.enable_light_color
         col = split.column()
-        col.prop(props, "enable_override_light_color")
+        col.prop(props, "override_light_color")
         col = split.column()
-        col.enabled = props.enable_override_light_color
-        col.prop(props, "override_light_color", text="")
+        col.enabled = props.override_light_color
+        col.prop(props, "light_color", text="")
         row = layout.row()
-        row.enabled = props.enable_override_light_color
-        row.prop(props, "override_light_direction", text="")
+        row.enabled = props.override_light_color and props.enable_light_color
+        row.prop(props, "light_direction", text="")
 
         layout.prop(props, "enable_fog")
+        split = layout.split()
+        split.enabled = props.enable_fog
+        col = split.column()
+        col.prop(props, "override_fog")
+        col = split.column()
+        col.enabled = props.override_fog
+        col.prop(props, "fog_color", text="")
+        row = layout.row()
+        row.enabled = props.override_fog and props.enable_fog
+        row.prop(props, "fog_start")
+        row = layout.row()
+        row.enabled = props.override_fog and props.enable_fog
+        row.prop(props, "fog_length")
 
 
 def register():
