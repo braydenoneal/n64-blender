@@ -3,7 +3,7 @@ import bpy
 
 class ResetGlobals(bpy.types.Operator):
     bl_idname = "object.reset_4b_globals"
-    bl_label = "Reset 4B Global Settings"
+    bl_label = "Reset"
     bl_options = {"REGISTER", "UNDO", "PRESET"}
 
     def execute(self, _context):
@@ -35,9 +35,9 @@ def update(_self, _context):
 
 
 class Props(bpy.types.PropertyGroup):
-    fog_start: bpy.props.FloatProperty(name="Fog Start", min=0, default=16, update=update)
+    fog_start: bpy.props.FloatProperty(name="Fog Start", min=0, step=100, default=16, update=update)
 
-    fog_length: bpy.props.FloatProperty(name="Fog Length", min=0, default=32, update=update)
+    fog_length: bpy.props.FloatProperty(name="Fog Length", min=0, step=100, default=32, update=update)
 
     fog_color: bpy.props.FloatVectorProperty(
         name="Fog Color",
@@ -70,7 +70,6 @@ class Props(bpy.types.PropertyGroup):
     )
 
     light_direction: bpy.props.FloatVectorProperty(
-        name="Light Direction",
         size=3,
         min=-1,
         max=1,
@@ -80,7 +79,7 @@ class Props(bpy.types.PropertyGroup):
 
 
 class Panel(bpy.types.Panel):
-    bl_label = "4B Globals"
+    bl_label = "4B Global Settings"
     bl_idname = "OBJECT_PT_4B_GLOBALS_PANEL"
     bl_space_type = "VIEW_3D"
     bl_region_type = "WINDOW"
@@ -88,8 +87,6 @@ class Panel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         props = context.scene.globals_4b
-
-        layout.label(text="4B Global Settings")
 
         layout.prop(props, "fog_start")
 

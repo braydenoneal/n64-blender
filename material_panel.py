@@ -6,9 +6,7 @@ from .globals_panel import update_globals_node_group
 
 
 def link_4b_material_library():
-    # TODO: Development only
-    directory = "C:\\Users\\happy\\projects\\blender-addon\\4b_material_library.blend"
-    # directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), "4b_material_library.blend")
+    directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), "4b_material_library.blend")
     prev_mode = bpy.context.mode
 
     if prev_mode != "OBJECT":
@@ -155,6 +153,16 @@ def update_material(material):
 
     shader_inputs["Enable Light Color"].default_value = props.enable_light_color
 
+    shader_inputs["Override Ambient Color"].default_value = props.override_ambient_color
+
+    shader_inputs["Enable Override Ambient Color"].default_value = props.enable_override_ambient_color
+
+    shader_inputs["Override Light Color"].default_value = props.override_light_color
+
+    shader_inputs["Override Light Direction"].default_value = props.override_light_direction
+
+    shader_inputs["Enable Override Light Color"].default_value = props.enable_override_light_color
+
     shader_inputs["Enable Fog"].default_value = props.enable_fog
 
 
@@ -170,7 +178,6 @@ class Create4BMaterial(bpy.types.Operator):
         else:
             material = create_4b_material(obj)
             update_material(material)
-            self.report({"INFO"}, "Created new 4B material.")
         return {"FINISHED"}
 
 
@@ -206,7 +213,6 @@ class Props(bpy.types.PropertyGroup):
 
     enable_solid_color: bpy.props.BoolProperty(name="Enable Solid Color", default=False, update=update)
     solid_color: bpy.props.FloatVectorProperty(
-        name="Solid Color",
         subtype="COLOR",
         size=4,
         min=0,
@@ -219,7 +225,6 @@ class Props(bpy.types.PropertyGroup):
 
     enable_overlay_color: bpy.props.BoolProperty(name="Enable Overlay Color", default=False, update=update)
     overlay_color: bpy.props.FloatVectorProperty(
-        name="Overlay Color",
         subtype="COLOR",
         size=4,
         min=0,
@@ -230,7 +235,34 @@ class Props(bpy.types.PropertyGroup):
 
     enable_ambient_color: bpy.props.BoolProperty(name="Enable Ambient Color", default=True, update=update)
 
+    enable_override_ambient_color: bpy.props.BoolProperty(name="Override Ambient Color", default=False, update=update)
+    override_ambient_color: bpy.props.FloatVectorProperty(
+        subtype="COLOR",
+        size=4,
+        min=0,
+        max=1,
+        default=(1, 1, 1, 1),
+        update=update
+    )
+
     enable_light_color: bpy.props.BoolProperty(name="Enable Light Color", default=True, update=update)
+
+    enable_override_light_color: bpy.props.BoolProperty(name="Override Light Color", default=False, update=update)
+    override_light_color: bpy.props.FloatVectorProperty(
+        subtype="COLOR",
+        size=4,
+        min=0,
+        max=1,
+        default=(1, 1, 1, 1),
+        update=update
+    )
+    override_light_direction: bpy.props.FloatVectorProperty(
+        size=3,
+        min=-1,
+        max=1,
+        default=(0, 0, 1),
+        update=update
+    )
 
     enable_fog: bpy.props.BoolProperty(name="Enable Fog", default=True, update=update)
 
@@ -277,22 +309,39 @@ class Panel(bpy.types.Panel):
         split = layout.split()
         col = split.column()
         col.prop(props, "enable_solid_color")
-        if props.enable_solid_color:
-            col = split.column()
-            col.prop(props, "solid_color", text="")
+        col = split.column()
+        col.enabled = props.enable_solid_color
+        col.prop(props, "solid_color", text="")
 
         layout.prop(props, "enable_vertex_colors")
 
         split = layout.split()
         col = split.column()
         col.prop(props, "enable_overlay_color")
-        if props.enable_overlay_color:
-            col = split.column()
-            col.prop(props, "overlay_color", text="")
+        col = split.column()
+        col.enabled = props.enable_overlay_color
+        col.prop(props, "overlay_color", text="")
 
         layout.prop(props, "enable_ambient_color")
 
+        split = layout.split()
+        col = split.column()
+        col.prop(props, "enable_override_ambient_color")
+        col = split.column()
+        col.enabled = props.enable_override_ambient_color
+        col.prop(props, "override_ambient_color", text="")
+
         layout.prop(props, "enable_light_color")
+
+        split = layout.split()
+        col = split.column()
+        col.prop(props, "enable_override_light_color")
+        col = split.column()
+        col.enabled = props.enable_override_light_color
+        col.prop(props, "override_light_color", text="")
+        row = layout.row()
+        row.enabled = props.enable_override_light_color
+        row.prop(props, "override_light_direction", text="")
 
         layout.prop(props, "enable_fog")
 
