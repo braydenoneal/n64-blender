@@ -16,8 +16,9 @@ Todo
 - [x] reset sidebar options to default when creating new material
 - [x] global overrides
 - [x] vertex alpha
-- [ ] texture scale
+- [x] texture scale
 - [ ] multiple textures (vertex alpha and separate uv maps too)
+- [ ] convert panel classes to layout.panel
 - [ ] split up functions, classes, and files (sub property groups, sub panels, etc.)
 - [ ] world space light direction toggle
 - [ ] post-processing: horizontal blur and large antialiasing
@@ -30,6 +31,7 @@ Todo
 - [ ] geometry that always faces the camera
 - [ ] create color attribute when a 4b material is selected, not just created
 - [ ] Gouraud shading (see Documents/Blender/4b_specular_highlights_example.blend)
+- [ ] fix texture clamp (it should be in all directions)
 
 Later
 -----

@@ -105,6 +105,9 @@ def update_material(material):
     filter_settings = nodes["Bilinear UV"]
     filter_inputs = filter_settings.inputs
 
+    filter_inputs["X Scale"].default_value = props.x_scale
+    filter_inputs["Y Scale"].default_value = props.y_scale
+
     if props.texture and not props.enable_solid_color:
         width, height = props.texture.size
         filter_inputs["Width"].default_value = width
@@ -112,6 +115,9 @@ def update_material(material):
     else:
         filter_inputs["Width"].default_value = 0
         filter_inputs["Height"].default_value = 0
+
+    filter_inputs["X Shift"].default_value = props.x_shift
+    filter_inputs["Y Shift"].default_value = props.y_shift
 
     x_bounds = props.x_bounds
 
@@ -205,6 +211,12 @@ class Props(bpy.types.PropertyGroup):
 
     x_bounds: bpy.props.EnumProperty(name="X Bounds", items=bound_options, default="repeat", update=update)
     y_bounds: bpy.props.EnumProperty(name="Y Bounds", items=bound_options, default="repeat", update=update)
+
+    x_shift: bpy.props.IntProperty(name="Shift", update=update)
+    y_shift: bpy.props.IntProperty(name="Shift", update=update)
+
+    x_scale: bpy.props.FloatProperty(name="Scale", default=1, update=update)
+    y_scale: bpy.props.FloatProperty(name="Scale", default=1, update=update)
 
     enable_transparency: bpy.props.BoolProperty(default=False, update=update)
 
@@ -340,8 +352,17 @@ class TexturePanel(PanelOptions, bpy.types.Panel):
         else:
             layout.label(text="Size:")
 
-        layout.prop(props, "x_bounds")
-        layout.prop(props, "y_bounds")
+        split = layout.split()
+
+        col = split.column(align=True)
+        col.prop(props, "x_bounds")
+        col.prop(props, "x_shift")
+        col.prop(props, "x_scale")
+
+        col = split.column(align=True)
+        col.prop(props, "y_bounds")
+        col.prop(props, "y_shift")
+        col.prop(props, "y_scale")
 
 
 class SolidColorPanel(PanelOptions, bpy.types.Panel):
@@ -509,10 +530,9 @@ class FogPanel(PanelOptions, bpy.types.Panel):
         layout.prop(props, "override_fog", expand=True, text=" ")
         row = layout.row()
         row.enabled = props.override_fog == "override"
-        row.prop(props, "fog_start")
-        row = layout.row()
-        row.enabled = props.override_fog == "override"
-        row.prop(props, "fog_length")
+        col = row.column(align=True)
+        col.prop(props, "fog_start")
+        col.prop(props, "fog_length")
         row = layout.row()
         row.enabled = props.override_fog == "override"
         row.prop(props, "fog_color")
