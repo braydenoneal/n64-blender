@@ -82,6 +82,9 @@ def create_4b_material(obj):
         if "Color" not in obj.data.attributes:
             obj.data.color_attributes.new("Color", "FLOAT_COLOR", "CORNER")
 
+        if "Alpha" not in obj.data.attributes:
+            obj.data.color_attributes.new("Alpha", "FLOAT_COLOR", "CORNER")
+
         obj.data.materials.append(material)
         if bpy.context.object is not None:
             bpy.context.object.active_material_index = len(obj.material_slots) - 1
