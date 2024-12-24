@@ -125,15 +125,12 @@ def update_material(material):
     shader_settings = nodes["Shader"]
     shader_inputs = shader_settings.inputs
 
-    shader_inputs["Enable Transparency"].default_value = props.transparency_mode != "opaque"
+    shader_inputs["Enable Transparency"].default_value = props.enable_transparency
 
-    transparency_mode_to_blend_method = {
-        "opaque": "OPAQUE",
-        "cutout": "CLIP",
-        "transparent": "BLEND"
-    }
-
-    material.blend_method = transparency_mode_to_blend_method[props.transparency_mode]
+    if not props.enable_transparency:
+        material.blend_method = "OPAQUE"
+    else:
+        material.blend_method = "CLIP" if props.transparency_mode == "cutout" else "BLEND"
 
     material.use_backface_culling = props.enable_backface_culling
 
@@ -155,13 +152,13 @@ def update_material(material):
 
     shader_inputs["Override Ambient Color"].default_value = props.ambient_color
 
-    shader_inputs["Enable Override Ambient Color"].default_value = props.override_ambient_color
+    shader_inputs["Enable Override Ambient Color"].default_value = props.override_ambient_color == "override"
 
     shader_inputs["Override Light Color"].default_value = props.light_color
 
     shader_inputs["Override Light Direction"].default_value = props.light_direction
 
-    shader_inputs["Enable Override Light Color"].default_value = props.override_light_color
+    shader_inputs["Enable Override Light Color"].default_value = props.override_light_color == "override"
 
     shader_inputs["Enable Fog"].default_value = props.enable_fog
 
@@ -171,7 +168,7 @@ def update_material(material):
 
     shader_inputs["Override Fog Color"].default_value = props.fog_color
 
-    shader_inputs["Enable Override Fog"].default_value = props.override_fog
+    shader_inputs["Enable Override Fog"].default_value = props.override_fog == "override"
 
 
 class Create4BMaterial(bpy.types.Operator):
@@ -206,23 +203,22 @@ class Props(bpy.types.PropertyGroup):
     x_bounds: bpy.props.EnumProperty(name="X Bounds", items=bound_options, default="repeat", update=update)
     y_bounds: bpy.props.EnumProperty(name="Y Bounds", items=bound_options, default="repeat", update=update)
 
+    enable_transparency: bpy.props.BoolProperty(default=True, update=update)
+
+    translucency: bpy.props.FloatProperty(name="Translucency", min=0, max=1, step=1, update=update)
+
     transparency_options = [
-        ("opaque", "Opaque", ""),
-        ("cutout", "Cutout", ""),
         ("transparent", "Transparent", ""),
+        ("cutout", "Cutout", "")
     ]
 
-    transparency_mode: bpy.props.EnumProperty(name="Transparency Mode", items=transparency_options, default="opaque",
-                                              update=update)
-
-    translucency: bpy.props.FloatProperty(name="Translucency",
-                                          description="How much light passes through. 0 is fully opaque and 1 is fully transparent. Transparency mode must be set to \"Transparent\"",
-                                          min=0, max=1, step=1, update=update)
+    transparency_mode: bpy.props.EnumProperty(name="Mode", items=transparency_options, default="transparent", update=update)
 
     enable_backface_culling: bpy.props.BoolProperty(name="Enable Backface Culling", default=True, update=update)
 
-    enable_solid_color: bpy.props.BoolProperty(name="Enable Solid Color", default=False, update=update)
+    enable_solid_color: bpy.props.BoolProperty(name="Solid Color", default=False, update=update)
     solid_color: bpy.props.FloatVectorProperty(
+        name="Color",
         subtype="COLOR",
         size=4,
         min=0,
@@ -235,6 +231,7 @@ class Props(bpy.types.PropertyGroup):
 
     enable_overlay_color: bpy.props.BoolProperty(name="Enable Overlay Color", default=False, update=update)
     overlay_color: bpy.props.FloatVectorProperty(
+        name="Color",
         subtype="COLOR",
         size=4,
         min=0,
@@ -243,9 +240,15 @@ class Props(bpy.types.PropertyGroup):
         update=update
     )
 
+    override_options = [
+        ("use_global", "Use Global", ""),
+        ("override", "Override", "")
+    ]
+
     enable_ambient_color: bpy.props.BoolProperty(name="Enable Ambient Color", default=True, update=update)
-    override_ambient_color: bpy.props.BoolProperty(name="Override Ambient Color", default=False, update=update)
+    override_ambient_color: bpy.props.EnumProperty(items=override_options, default="use_global", update=update)
     ambient_color: bpy.props.FloatVectorProperty(
+        name="Color",
         subtype="COLOR",
         size=4,
         min=0,
@@ -255,8 +258,9 @@ class Props(bpy.types.PropertyGroup):
     )
 
     enable_light_color: bpy.props.BoolProperty(name="Enable Light Color", default=True, update=update)
-    override_light_color: bpy.props.BoolProperty(name="Override Light Color", default=False, update=update)
+    override_light_color: bpy.props.EnumProperty(items=override_options, default="use_global", update=update)
     light_color: bpy.props.FloatVectorProperty(
+        name="Color",
         subtype="COLOR",
         size=4,
         min=0,
@@ -265,6 +269,7 @@ class Props(bpy.types.PropertyGroup):
         update=update
     )
     light_direction: bpy.props.FloatVectorProperty(
+        name="Direction",
         size=3,
         min=-1,
         max=1,
@@ -273,11 +278,11 @@ class Props(bpy.types.PropertyGroup):
     )
 
     enable_fog: bpy.props.BoolProperty(name="Enable Fog", default=True, update=update)
-    override_fog: bpy.props.BoolProperty(name="Override Fog", default=False, update=update)
-    fog_start: bpy.props.FloatProperty(name="Fog Start", min=0, step=100, default=16, update=update)
-    fog_length: bpy.props.FloatProperty(name="Fog Length", min=0, step=100, default=32, update=update)
+    override_fog: bpy.props.EnumProperty(items=override_options, default="use_global", update=update)
+    fog_start: bpy.props.FloatProperty(name="Start", min=0, step=100, default=16, update=update)
+    fog_length: bpy.props.FloatProperty(name="Length", min=0, step=100, default=32, update=update)
     fog_color: bpy.props.FloatVectorProperty(
-        name="Fog Color",
+        name="Color",
         subtype="COLOR",
         size=4,
         min=0,
@@ -287,12 +292,15 @@ class Props(bpy.types.PropertyGroup):
     )
 
 
-class Panel(bpy.types.Panel):
-    bl_label = "4B Material"
-    bl_idname = "MATERIAL_PT_4B_INSPECTOR"
+class PanelOptions:
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "material"
+
+
+class Panel(PanelOptions, bpy.types.Panel):
+    bl_label = "4B Material"
+    bl_idname = "MATERIAL_PT_4B_INSPECTOR"
 
     def draw(self, context):
         layout = self.layout
@@ -306,95 +314,226 @@ class Panel(bpy.types.Panel):
             layout.label(text="This is not a 4B material.")
             return
 
+
+class TexturePanel(PanelOptions, bpy.types.Panel):
+    bl_parent_id = "MATERIAL_PT_4B_INSPECTOR"
+    bl_idname = "MATERIAL_PT_4B_INSPECTOR_TEXTURE"
+    bl_label = "Texture"
+
+    def draw(self, context):
+        layout = self.layout
         props = context.material.props_4b
 
-        box = layout.box()
-        box.enabled = not props.enable_solid_color
+        layout.use_property_split = True
+        layout.use_property_decorate = False
 
-        box.template_ID(props, "texture", open="image.open", new="image.new")
+        layout.enabled = not props.enable_solid_color
+
+        layout.template_ID(props, "texture", open="image.open", new="image.new")
 
         if props.texture is not None:
             width, height = props.texture.size
-            box.label(text=f"Size: {width}x{height}")
+            layout.label(text=f"Size: {width}x{height}")
         else:
-            box.label(text="Size:")
+            layout.label(text="Size:")
 
-        box.prop(props, "x_bounds")
-        box.prop(props, "y_bounds")
+        layout.prop(props, "x_bounds")
+        layout.prop(props, "y_bounds")
 
-        split = layout.split()
-        col = split.column()
-        col.prop(props, "enable_solid_color")
-        col = split.column()
-        col.enabled = props.enable_solid_color
-        col.prop(props, "solid_color", text="")
 
-        box = layout.box()
+class SolidColorPanel(PanelOptions, bpy.types.Panel):
+    bl_parent_id = "MATERIAL_PT_4B_INSPECTOR_TEXTURE"
+    bl_label = "Solid Color"
+    bl_options = {"DEFAULT_CLOSED"}
 
-        box.label(text="Transparency Mode")
-        box.prop(props, "transparency_mode", expand=True)
+    def draw_header(self,context):
+        layout = self.layout
+        props = context.material.props_4b
 
-        box.prop(props, "enable_backface_culling")
+        layout.prop(props, "enable_solid_color", text="")
 
-        row = box.row()
-        row.enabled = props.transparency_mode == "transparent"
-        row.prop(props, "translucency", slider=True)
+    def draw(self, context):
+        layout = self.layout
+        props = context.material.props_4b
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        layout.enabled = props.enable_solid_color
+        layout.prop(props, "solid_color")
+
+
+class TransparencyPanel(PanelOptions, bpy.types.Panel):
+    bl_parent_id = "MATERIAL_PT_4B_INSPECTOR"
+    bl_label = "Transparency"
+
+    def draw_header(self,context):
+        layout = self.layout
+        props = context.material.props_4b
+
+        layout.prop(props, "enable_transparency", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        props = context.material.props_4b
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        layout.prop(props, "enable_backface_culling")
+
+        row = layout.row()
+        row.enabled = props.enable_transparency
+        row.prop(props, "transparency_mode", expand=True)
+        row = layout.row()
+        row.enabled = props.enable_transparency
+        row.prop(props, "translucency")
+
+
+class ShadingPanel(PanelOptions, bpy.types.Panel):
+    bl_parent_id = "MATERIAL_PT_4B_INSPECTOR"
+    bl_idname = "MATERIAL_PT_4B_INSPECTOR_SHADING"
+    bl_label = "Shading"
+
+    def draw(self, context):
+        layout = self.layout
+        props = context.material.props_4b
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
 
         layout.prop(props, "enable_vertex_colors")
 
-        split = layout.split()
-        col = split.column()
-        col.prop(props, "enable_overlay_color")
-        col = split.column()
-        col.enabled = props.enable_overlay_color
-        col.prop(props, "overlay_color", text="")
 
-        box = layout.box()
+class OverlayColorPanel(PanelOptions, bpy.types.Panel):
+    bl_parent_id = "MATERIAL_PT_4B_INSPECTOR_SHADING"
+    bl_label = "Overlay Color"
+    bl_options = {"DEFAULT_CLOSED"}
 
-        box.prop(props, "enable_ambient_color")
-        split = box.split()
-        split.enabled = props.enable_ambient_color
-        col = split.column()
-        col.prop(props, "override_ambient_color")
-        col = split.column()
-        col.enabled = props.override_ambient_color
-        col.prop(props, "ambient_color", text="")
+    def draw_header(self,context):
+        layout = self.layout
+        props = context.material.props_4b
 
-        box = layout.box()
+        layout.prop(props, "enable_overlay_color", text="")
 
-        box.prop(props, "enable_light_color")
-        split = box.split()
-        split.enabled = props.enable_light_color
-        col = split.column()
-        col.prop(props, "override_light_color")
-        col = split.column()
-        col.enabled = props.override_light_color
-        col.prop(props, "light_color", text="")
-        row = box.row()
-        row.enabled = props.override_light_color and props.enable_light_color
-        row.prop(props, "light_direction", text="")
+    def draw(self, context):
+        layout = self.layout
+        props = context.material.props_4b
 
-        box = layout.box()
+        layout.use_property_split = True
+        layout.use_property_decorate = False
 
-        box.prop(props, "enable_fog")
-        split = box.split()
-        split.enabled = props.enable_fog
-        col = split.column()
-        col.prop(props, "override_fog")
-        col = split.column()
-        col.enabled = props.override_fog
-        col.prop(props, "fog_color", text="")
-        row = box.row()
-        row.enabled = props.override_fog and props.enable_fog
+        layout.enabled = props.enable_overlay_color
+
+        layout.prop(props, "overlay_color")
+
+
+class AmbientLightPanel(PanelOptions, bpy.types.Panel):
+    bl_parent_id = "MATERIAL_PT_4B_INSPECTOR_SHADING"
+    bl_label = "Ambient Light"
+    bl_options = {"DEFAULT_CLOSED"}
+
+    def draw_header(self,context):
+        layout = self.layout
+        props = context.material.props_4b
+
+        layout.prop(props, "enable_ambient_color", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        props = context.material.props_4b
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        layout.enabled = props.enable_ambient_color
+
+        layout.prop(props, "override_ambient_color", expand=True, text=" ")
+        row = layout.row()
+        row.enabled = props.override_ambient_color == "override"
+        row.prop(props, "ambient_color")
+
+
+class DirectionalLightPanel(PanelOptions, bpy.types.Panel):
+    bl_parent_id = "MATERIAL_PT_4B_INSPECTOR_SHADING"
+    bl_label = "Directional Light"
+    bl_options = {"DEFAULT_CLOSED"}
+
+    def draw_header(self,context):
+        layout = self.layout
+        props = context.material.props_4b
+
+        layout.prop(props, "enable_light_color", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        props = context.material.props_4b
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        layout.enabled = props.enable_light_color
+
+        layout.prop(props, "override_light_color", expand=True, text=" ")
+        row = layout.row()
+        row.enabled = props.override_light_color == "override"
+        row.prop(props, "light_color")
+        row = layout.row()
+        row.enabled = props.override_light_color == "override"
+        row.prop(props, "light_direction")
+
+
+class FogPanel(PanelOptions, bpy.types.Panel):
+    bl_parent_id = "MATERIAL_PT_4B_INSPECTOR_SHADING"
+    bl_label = "Fog"
+    bl_options = {"DEFAULT_CLOSED"}
+
+    def draw_header(self,context):
+        layout = self.layout
+        props = context.material.props_4b
+
+        layout.prop(props, "enable_fog", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        props = context.material.props_4b
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        layout.enabled = props.enable_fog
+
+        layout.prop(props, "override_fog", expand=True, text=" ")
+        row = layout.row()
+        row.enabled = props.override_fog == "override"
         row.prop(props, "fog_start")
-        row = box.row()
-        row.enabled = props.override_fog and props.enable_fog
+        row = layout.row()
+        row.enabled = props.override_fog == "override"
         row.prop(props, "fog_length")
+        row = layout.row()
+        row.enabled = props.override_fog == "override"
+        row.prop(props, "fog_color")
+
+
+panels = (
+    Panel,
+    TexturePanel,
+    SolidColorPanel,
+    TransparencyPanel,
+    ShadingPanel,
+    OverlayColorPanel,
+    AmbientLightPanel,
+    DirectionalLightPanel,
+    FogPanel
+)
 
 
 def register():
     bpy.types.Material.is_4b = bpy.props.BoolProperty()
-    bpy.utils.register_class(Panel)
+
+    for panel in panels:
+        bpy.utils.register_class(panel)
+
     bpy.utils.register_class(Props)
     bpy.utils.register_class(Create4BMaterial)
     bpy.types.Material.props_4b = bpy.props.PointerProperty(type=Props)
@@ -402,7 +541,10 @@ def register():
 
 def unregister():
     del bpy.types.Material.is_4b
-    bpy.utils.unregister_class(Panel)
+
+    for panel in panels:
+        bpy.utils.unregister_class(panel)
+
     bpy.utils.unregister_class(Props)
     bpy.utils.unregister_class(Create4BMaterial)
     del bpy.types.Material.props_4b

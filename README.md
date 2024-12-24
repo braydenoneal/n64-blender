@@ -14,7 +14,7 @@ Todo
 - [x] global variables
 - [x] set defaults for globals
 - [x] reset sidebar options to default when creating new material
-- [ ] global overrides
+- [x] global overrides
 - [ ] world space light direction toggle
 - [ ] post-processing: horizontal blur and large antialiasing
 - [ ] skybox
@@ -25,6 +25,7 @@ Todo
 - [ ] texture animation
 - [ ] color masked textures? (think colored bundles)
 - [ ] global toggles (disable fog, etc. globally)
+- [ ] split up functions, classes, and files (sub property groups, sub panels, etc.)
 
 Later
 -----
