@@ -203,7 +203,7 @@ class Props(bpy.types.PropertyGroup):
     x_bounds: bpy.props.EnumProperty(name="X Bounds", items=bound_options, default="repeat", update=update)
     y_bounds: bpy.props.EnumProperty(name="Y Bounds", items=bound_options, default="repeat", update=update)
 
-    enable_transparency: bpy.props.BoolProperty(default=True, update=update)
+    enable_transparency: bpy.props.BoolProperty(default=False, update=update)
 
     translucency: bpy.props.FloatProperty(name="Translucency", min=0, max=1, step=1, update=update)
 
