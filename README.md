@@ -1,3 +1,9 @@
+# N64 Blender
+
+Nintendo 64 based graphics in Blender.
+
+Borrowed heavily from [Fast64](https://github.com/Fast-64/fast64).
+
 Todo
 ====
 
