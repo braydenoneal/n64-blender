@@ -94,7 +94,11 @@ def write_file(filepath):
             scene_materials[slot.name] = j
 
         vertices = ob.data.vertices
-        uvs = ob.data.uv_layers.active.data
+        uvs = ob.data.uv_layers['UVMap'].data
+
+        if 'Color' not in ob.data.color_attributes.keys():
+            continue
+
         color = ob.data.color_attributes['Color'].data
 
         for face in ob.data.polygons:
