@@ -101,7 +101,12 @@ def write_file(filepath):
             if len(face.vertices) != 3:
                 continue
 
-            material = scene_materials[material_slots[face.material_index]]
+            material_name = material_slots[face.material_index]
+
+            if material_name not in scene_materials.keys():
+                continue
+
+            material = scene_materials[material_name]
             face_json = {}
 
             for vertex_name, vertex_index, loop_index in zip(('a', 'b', 'c'), face.vertices, face.loop_indices):
