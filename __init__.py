@@ -1,4 +1,5 @@
 from .module_loader import refresh
+
 refresh()
 
 bl_info = {
@@ -13,14 +14,19 @@ bl_info = {
 
 from . import material_panel
 from . import globals_panel
+from . import export_operator
+
 
 def register():
     material_panel.register()
     globals_panel.register()
+    export_operator.register()
+
 
 def unregister():
     material_panel.unregister()
     globals_panel.unregister()
+    export_operator.unregister()
 
 
 if __name__ == "__main__":

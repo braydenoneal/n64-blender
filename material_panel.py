@@ -1,6 +1,7 @@
 import os
 
 import bpy
+from bpy.props import PointerProperty
 
 from .globals_panel import update_globals_node_group
 
@@ -200,7 +201,7 @@ def update(_self, context):
 
 
 class Props(bpy.types.PropertyGroup):
-    texture: bpy.props.PointerProperty(name="Texture", type=bpy.types.Image, update=update)
+    texture: PointerProperty(name="Texture", type=bpy.types.Image, update=update)
 
     bound_options = [
         ("repeat", "Repeat", ""),
@@ -229,7 +230,9 @@ class Props(bpy.types.PropertyGroup):
 
     transparency_mode: bpy.props.EnumProperty(name="Mode", items=transparency_options, default="transparent", update=update)
 
-    enable_backface_culling: bpy.props.BoolProperty(name="Enable Backface Culling", default=True, update=update)
+    enable_backface_culling: bpy.props.BoolProperty(name="Backface Culling", default=True, update=update)
+
+    enable_vertex_alpha: bpy.props.BoolProperty(name="Vertex Alpha", default=True, update=update)
 
     enable_solid_color: bpy.props.BoolProperty(name="Solid Color", default=False, update=update)
     solid_color: bpy.props.FloatVectorProperty(
@@ -242,9 +245,9 @@ class Props(bpy.types.PropertyGroup):
         update=update
     )
 
-    enable_vertex_colors: bpy.props.BoolProperty(name="Enable Vertex Colors", default=True, update=update)
+    enable_vertex_colors: bpy.props.BoolProperty(name="Vertex Colors", default=True, update=update)
 
-    enable_overlay_color: bpy.props.BoolProperty(name="Enable Overlay Color", default=False, update=update)
+    enable_overlay_color: bpy.props.BoolProperty(default=False, update=update)
     overlay_color: bpy.props.FloatVectorProperty(
         name="Color",
         subtype="COLOR",
@@ -260,7 +263,7 @@ class Props(bpy.types.PropertyGroup):
         ("override", "Override", "")
     ]
 
-    enable_ambient_color: bpy.props.BoolProperty(name="Enable Ambient Color", default=True, update=update)
+    enable_ambient_color: bpy.props.BoolProperty(default=True, update=update)
     override_ambient_color: bpy.props.EnumProperty(items=override_options, default="use_global", update=update)
     ambient_color: bpy.props.FloatVectorProperty(
         name="Color",
@@ -272,7 +275,7 @@ class Props(bpy.types.PropertyGroup):
         update=update
     )
 
-    enable_light_color: bpy.props.BoolProperty(name="Enable Light Color", default=True, update=update)
+    enable_light_color: bpy.props.BoolProperty(default=True, update=update)
     override_light_color: bpy.props.EnumProperty(items=override_options, default="use_global", update=update)
     light_color: bpy.props.FloatVectorProperty(
         name="Color",
@@ -292,7 +295,7 @@ class Props(bpy.types.PropertyGroup):
         update=update
     )
 
-    enable_fog: bpy.props.BoolProperty(name="Enable Fog", default=True, update=update)
+    enable_fog: bpy.props.BoolProperty(default=True, update=update)
     override_fog: bpy.props.EnumProperty(items=override_options, default="use_global", update=update)
     fog_start: bpy.props.FloatProperty(name="Start", min=0, step=100, default=16, update=update)
     fog_length: bpy.props.FloatProperty(name="Length", min=0, step=100, default=32, update=update)
@@ -370,7 +373,7 @@ class SolidColorPanel(PanelOptions, bpy.types.Panel):
     bl_label = "Solid Color"
     bl_options = {"DEFAULT_CLOSED"}
 
-    def draw_header(self,context):
+    def draw_header(self, context):
         layout = self.layout
         props = context.material.props_4b
 
@@ -391,7 +394,7 @@ class TransparencyPanel(PanelOptions, bpy.types.Panel):
     bl_parent_id = "MATERIAL_PT_4B_INSPECTOR"
     bl_label = "Transparency"
 
-    def draw_header(self,context):
+    def draw_header(self, context):
         layout = self.layout
         props = context.material.props_4b
 
@@ -414,10 +417,9 @@ class TransparencyPanel(PanelOptions, bpy.types.Panel):
         row.prop(props, "translucency")
 
 
-class ShadingPanel(PanelOptions, bpy.types.Panel):
+class VertexAttributesPanel(PanelOptions, bpy.types.Panel):
     bl_parent_id = "MATERIAL_PT_4B_INSPECTOR"
-    bl_idname = "MATERIAL_PT_4B_INSPECTOR_SHADING"
-    bl_label = "Shading"
+    bl_label = "Vertex Attributes"
 
     def draw(self, context):
         layout = self.layout
@@ -427,6 +429,16 @@ class ShadingPanel(PanelOptions, bpy.types.Panel):
         layout.use_property_decorate = False
 
         layout.prop(props, "enable_vertex_colors")
+        layout.prop(props, "enable_vertex_alpha")
+
+
+class ShadingPanel(PanelOptions, bpy.types.Panel):
+    bl_parent_id = "MATERIAL_PT_4B_INSPECTOR"
+    bl_idname = "MATERIAL_PT_4B_INSPECTOR_SHADING"
+    bl_label = "Shading"
+
+    def draw(self, context):
+        pass
 
 
 class OverlayColorPanel(PanelOptions, bpy.types.Panel):
@@ -434,7 +446,7 @@ class OverlayColorPanel(PanelOptions, bpy.types.Panel):
     bl_label = "Overlay Color"
     bl_options = {"DEFAULT_CLOSED"}
 
-    def draw_header(self,context):
+    def draw_header(self, context):
         layout = self.layout
         props = context.material.props_4b
 
@@ -457,7 +469,7 @@ class AmbientLightPanel(PanelOptions, bpy.types.Panel):
     bl_label = "Ambient Light"
     bl_options = {"DEFAULT_CLOSED"}
 
-    def draw_header(self,context):
+    def draw_header(self, context):
         layout = self.layout
         props = context.material.props_4b
 
@@ -483,7 +495,7 @@ class DirectionalLightPanel(PanelOptions, bpy.types.Panel):
     bl_label = "Directional Light"
     bl_options = {"DEFAULT_CLOSED"}
 
-    def draw_header(self,context):
+    def draw_header(self, context):
         layout = self.layout
         props = context.material.props_4b
 
@@ -512,7 +524,7 @@ class FogPanel(PanelOptions, bpy.types.Panel):
     bl_label = "Fog"
     bl_options = {"DEFAULT_CLOSED"}
 
-    def draw_header(self,context):
+    def draw_header(self, context):
         layout = self.layout
         props = context.material.props_4b
 
@@ -543,6 +555,7 @@ panels = (
     TexturePanel,
     SolidColorPanel,
     TransparencyPanel,
+    VertexAttributesPanel,
     ShadingPanel,
     OverlayColorPanel,
     AmbientLightPanel,

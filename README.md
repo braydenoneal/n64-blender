@@ -15,8 +15,9 @@ Todo
 - [x] set defaults for globals
 - [x] reset sidebar options to default when creating new material
 - [x] global overrides
-- [x] vertex alpha
+- [x] fix texture clamp
 - [x] texture scale
+- [;] vertex alpha [add toggle, maybe replace vertex alpha with the alpha of the vertex color?]
 - [ ] multiple textures (vertex alpha and separate uv maps too)
 - [ ] convert panel classes to layout.panel
 - [ ] split up functions, classes, and files (sub property groups, sub panels, etc.)
@@ -31,7 +32,11 @@ Todo
 - [ ] geometry that always faces the camera
 - [ ] create color attribute when a 4b material is selected, not just created
 - [ ] Gouraud shading (see Documents/Blender/4b_specular_highlights_example.blend)
-- [ ] fix texture clamp (it should be in all directions)
+- [ ] global toggles (disable fog globally)
+- [ ] convert texture shift to floats
+- [ ] decal depth bias? https://github.com/gonetz/GLideN64/issues/541#issuecomment-104501913
+- [ ] alpha texture map (binary texture for cutout)
+- [ ] toggle filter
 
 Later
 -----

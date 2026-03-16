@@ -6,15 +6,10 @@ def update_globals_node_group():
     global_settings = bpy.context.scene.globals_4b
 
     outputs.inputs["Fog Start"].default_value = global_settings.fog_start
-
     outputs.inputs["Fog Length"].default_value = global_settings.fog_length
-
     outputs.inputs["Fog Color"].default_value = global_settings.fog_color
-
     outputs.inputs["Ambient Color"].default_value = global_settings.ambient_color
-
     outputs.inputs["Light Color"].default_value = global_settings.light_color
-
     outputs.inputs["Light Direction"].default_value = global_settings.light_direction
 
 
@@ -95,7 +90,6 @@ class Panel(bpy.types.Panel):
         col.prop(props, "fog_length")
         layout.prop(props, "fog_color")
         layout.label()
-
 
 
 def draw_globals_panel(self, _context):
