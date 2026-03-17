@@ -132,6 +132,44 @@ def update_material(material):
     filter_inputs["Repeat Y"].default_value = y_bounds == "repeat"
     filter_inputs["Mirror Y"].default_value = y_bounds == "mirror"
 
+    for i in ["0, 0", "0, 1", "1, 0", "1, 1"]:
+        texture = nodes[f"Texture {i} B"]
+        texture.image = props.texture_b if not props.enable_solid_color else None
+
+    filter_settings = nodes["Bilinear UV B"]
+    filter_inputs = filter_settings.inputs
+
+    filter_inputs["X Scale"].default_value = props.x_scale_b
+    filter_inputs["Y Scale"].default_value = props.y_scale_b
+
+    if props.texture_b and not props.enable_solid_color:
+        width, height = props.texture_b.size
+        filter_inputs["Width"].default_value = width
+        filter_inputs["Height"].default_value = height
+    else:
+        filter_inputs["Width"].default_value = 0
+        filter_inputs["Height"].default_value = 0
+
+    filter_inputs["X Shift"].default_value = props.x_shift_b
+    filter_inputs["Y Shift"].default_value = props.y_shift_b
+
+    x_bounds = props.x_bounds_b
+
+    filter_inputs["Clamp X"].default_value = x_bounds == "extend"
+    filter_inputs["Repeat X"].default_value = x_bounds == "repeat"
+    filter_inputs["Mirror X"].default_value = x_bounds == "mirror"
+
+    y_bounds = props.y_bounds_b
+
+    filter_inputs["Clamp Y"].default_value = y_bounds == "extend"
+    filter_inputs["Repeat Y"].default_value = y_bounds == "repeat"
+    filter_inputs["Mirror Y"].default_value = y_bounds == "mirror"
+
+    mix_settings = nodes["Texture Mix"]
+    mix_inputs = mix_settings.inputs
+
+    mix_inputs["Mix"].default_value = props.texture_mix if props.enable_texture_b else 0
+
     shader_settings = nodes["Shader"]
     shader_inputs = shader_settings.inputs
 
@@ -145,41 +183,23 @@ def update_material(material):
     material.use_backface_culling = props.enable_backface_culling
 
     shader_inputs["Translucency"].default_value = props.translucency
-
     shader_inputs["Solid Color"].default_value = props.solid_color
-
     shader_inputs["Enable Solid Color"].default_value = props.enable_solid_color
-
     shader_inputs["Enable Vertex Colors"].default_value = props.enable_vertex_colors
-
     shader_inputs["Overlay Color"].default_value = props.overlay_color
-
     shader_inputs["Enable Overlay Color"].default_value = props.enable_overlay_color
-
     shader_inputs["Enable Ambient Color"].default_value = props.enable_ambient_color
-
     shader_inputs["Enable Light Color"].default_value = props.enable_light_color
-
     shader_inputs["Override Ambient Color"].default_value = props.ambient_color
-
     shader_inputs["Enable Override Ambient Color"].default_value = props.override_ambient_color == "override"
-
     shader_inputs["Override Light Color"].default_value = props.light_color
-
     shader_inputs["Override Light Direction"].default_value = props.light_direction
-
     shader_inputs["Enable Override Light Color"].default_value = props.override_light_color == "override"
-
     shader_inputs["Enable Fog"].default_value = props.enable_fog
-
     shader_inputs["Override Fog Start"].default_value = props.fog_start
-
     shader_inputs["Override Fog Length"].default_value = props.fog_length
-
     shader_inputs["Override Fog Color"].default_value = props.fog_color
-
     shader_inputs["Enable Override Fog"].default_value = props.override_fog == "override"
-
 
 class Create4BMaterial(bpy.types.Operator):
     bl_idname = "object.create_4b_mat"
@@ -213,15 +233,35 @@ class Props(bpy.types.PropertyGroup):
     x_bounds: bpy.props.EnumProperty(name="X Bounds", items=bound_options, default="repeat", update=update)
     y_bounds: bpy.props.EnumProperty(name="Y Bounds", items=bound_options, default="repeat", update=update)
 
-    x_shift: bpy.props.IntProperty(name="Shift", update=update)
-    y_shift: bpy.props.IntProperty(name="Shift", update=update)
+    x_shift: bpy.props.IntProperty(name="X Shift", update=update)
+    y_shift: bpy.props.IntProperty(name="Y Shift", update=update)
 
-    x_scale: bpy.props.FloatProperty(name="Scale", default=1, update=update)
-    y_scale: bpy.props.FloatProperty(name="Scale", default=1, update=update)
+    x_scale: bpy.props.FloatProperty(name="X Scale", min=0, default=1, update=update)
+    y_scale: bpy.props.FloatProperty(name="Y Scale", min=0, default=1, update=update)
+
+    enable_texture_b: bpy.props.BoolProperty(default=False, update=update)
+    texture_mix: bpy.props.FloatProperty(name="Scale", min=0, max=1, default=0.5, update=update)
+    texture_b: PointerProperty(name="Texture B", type=bpy.types.Image, update=update)
+
+    bound_options_b = [
+        ("repeat", "Repeat", ""),
+        ("extend", "Extend", ""),
+        ("clip", "Clip", ""),
+        ("mirror", "Mirror", "")
+    ]
+
+    x_bounds_b: bpy.props.EnumProperty(name="X Bounds", items=bound_options, default="repeat", update=update)
+    y_bounds_b: bpy.props.EnumProperty(name="Y Bounds", items=bound_options, default="repeat", update=update)
+
+    x_shift_b: bpy.props.IntProperty(name="X Shift", update=update)
+    y_shift_b: bpy.props.IntProperty(name="Y Shift", update=update)
+
+    x_scale_b: bpy.props.FloatProperty(name="X Scale", min=0, default=1, update=update)
+    y_scale_b: bpy.props.FloatProperty(name="Y Scale", min=0, default=1, update=update)
 
     enable_transparency: bpy.props.BoolProperty(default=False, update=update)
 
-    translucency: bpy.props.FloatProperty(name="Translucency", min=0, max=1, step=1, update=update)
+    translucency: bpy.props.FloatProperty(name="Translucency", min=0, max=1, update=update)
 
     transparency_options = [
         ("transparent", "Transparent", ""),
@@ -366,6 +406,49 @@ class TexturePanel(PanelOptions, bpy.types.Panel):
         col.prop(props, "y_bounds")
         col.prop(props, "y_shift")
         col.prop(props, "y_scale")
+
+
+class TextureBPanel(PanelOptions, bpy.types.Panel):
+    bl_parent_id = "MATERIAL_PT_4B_INSPECTOR"
+    bl_idname = "MATERIAL_PT_4B_INSPECTOR_TEXTURE_B"
+    bl_label = "Texture B"
+
+    def draw_header(self, context):
+        layout = self.layout
+        props = context.material.props_4b
+
+        layout.prop(props, "enable_texture_b", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        props = context.material.props_4b
+
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        layout.enabled = props.enable_texture_b
+
+        layout.prop(props, "texture_mix", text="Texture Mix")
+
+        layout.template_ID(props, "texture_b", open="image.open", new="image.new")
+
+        if props.texture is not None:
+            width, height = props.texture.size
+            layout.label(text=f"Size: {width}x{height}")
+        else:
+            layout.label(text="Size:")
+
+        split = layout.split()
+
+        col = split.column(align=True)
+        col.prop(props, "x_bounds_b")
+        col.prop(props, "x_shift_b")
+        col.prop(props, "x_scale_b")
+
+        col = split.column(align=True)
+        col.prop(props, "y_bounds_b")
+        col.prop(props, "y_shift_b")
+        col.prop(props, "y_scale_b")
 
 
 class SolidColorPanel(PanelOptions, bpy.types.Panel):
@@ -553,6 +636,7 @@ class FogPanel(PanelOptions, bpy.types.Panel):
 panels = (
     Panel,
     TexturePanel,
+    TextureBPanel,
     SolidColorPanel,
     TransparencyPanel,
     VertexAttributesPanel,
