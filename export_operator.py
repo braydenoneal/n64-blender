@@ -54,10 +54,19 @@ def write_file(filepath):
                 j['solid_color'] = rgb(p.solid_color)
             else:
                 j['texture'] = {
-                    'name': '.'.join(p.texture.name.split('.')[:-1]),
+                    'name': p.texture.name,
                     'bounds': {'x': p.x_bounds, 'y': p.y_bounds},
                     'scale': {'x': p.x_scale, 'y': p.y_scale},
                     'shift': {'x': p.x_shift, 'y': p.y_shift},
+                }
+
+            if p.enable_texture_b:
+                j['texture_b'] = {
+                    'name': p.texture_b.name,
+                    'bounds': {'x': p.x_bounds_b, 'y': p.y_bounds_b},
+                    'scale': {'x': p.x_scale_b, 'y': p.y_scale_b},
+                    'shift': {'x': p.x_shift_b, 'y': p.y_shift_b},
+                    'mix': p.texture_mix,
                 }
 
             j['backface_culling'] = p.enable_backface_culling
@@ -166,7 +175,7 @@ class ExportSomeData(Operator, ExportHelper):
         return write_file(self.filepath)
 
 
-def menu_func_export(self, context):
+def menu_func_export(self, _):
     self.layout.operator(ExportSomeData.bl_idname, text="4B Materials model (.json)")
 
 
