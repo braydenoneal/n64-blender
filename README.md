@@ -25,6 +25,7 @@ Todo
 - [x] texture scale
 - [x] vertex alpha (used with the alpha of the vertex color)
 - [;] multiple textures (vertex alpha and separate uv maps too) [add multiple uv maps]
+- [ ] model upgrading (allow models edited in previous versions to be updated to be usable)
 - [ ] convert panel classes to layout.panel
 - [ ] split up functions, classes, and files (sub property groups, sub panels, etc.)
 - [ ] world space light direction toggle
