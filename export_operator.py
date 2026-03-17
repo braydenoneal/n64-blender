@@ -83,16 +83,16 @@ def write_file(filepath):
                 j['overlay_color'] = rgb(p.overlay_color)
 
             if p.enable_ambient_color:
-                j['ambient_color'] = True if p.override_ambient_color == 'override' else rgb(p.ambient_color)
+                j['ambient_color'] = True if p.override_ambient_color != 'override' else rgb(p.ambient_color)
 
             if p.enable_light_color:
-                j['light_color'] = True if p.override_light_color == 'override' else {
+                j['light_color'] = True if p.override_light_color != 'override' else {
                     'color': rgb(p.light_color),
                     'direction': xyz(p.light_direction),
                 }
 
             if p.enable_fog:
-                j['fog'] = True if p.override_fog == 'override' else {
+                j['fog'] = True if p.override_fog != 'override' else {
                     'start': p.fog_start,
                     'length': p.fog_length,
                     'color': rgb(p.fog_color),
