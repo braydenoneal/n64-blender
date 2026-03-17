@@ -83,9 +83,6 @@ def create_4b_material(obj):
         if "Color" not in obj.data.attributes:
             obj.data.color_attributes.new("Color", "FLOAT_COLOR", "CORNER")
 
-        if "Alpha" not in obj.data.attributes:
-            obj.data.color_attributes.new("Alpha", "FLOAT_COLOR", "CORNER")
-
         obj.data.materials.append(material)
         if bpy.context.object is not None:
             bpy.context.object.active_material_index = len(obj.material_slots) - 1
@@ -201,6 +198,7 @@ def update_material(material):
     shader_inputs["Override Fog Color"].default_value = props.fog_color
     shader_inputs["Enable Override Fog"].default_value = props.override_fog == "override"
 
+
 class Create4BMaterial(bpy.types.Operator):
     bl_idname = "object.create_4b_mat"
     bl_label = "Create 4B Material"
@@ -271,8 +269,6 @@ class Props(bpy.types.PropertyGroup):
     transparency_mode: bpy.props.EnumProperty(name="Mode", items=transparency_options, default="transparent", update=update)
 
     enable_backface_culling: bpy.props.BoolProperty(name="Backface Culling", default=True, update=update)
-
-    enable_vertex_alpha: bpy.props.BoolProperty(name="Vertex Alpha", default=True, update=update)
 
     enable_solid_color: bpy.props.BoolProperty(name="Solid Color", default=False, update=update)
     solid_color: bpy.props.FloatVectorProperty(
@@ -512,7 +508,6 @@ class VertexAttributesPanel(PanelOptions, bpy.types.Panel):
         layout.use_property_decorate = False
 
         layout.prop(props, "enable_vertex_colors")
-        layout.prop(props, "enable_vertex_alpha")
 
 
 class ShadingPanel(PanelOptions, bpy.types.Panel):

@@ -23,7 +23,7 @@ Todo
 - [x] global overrides
 - [x] fix texture clamp
 - [x] texture scale
-- [;] vertex alpha [add toggle, maybe replace vertex alpha with the alpha of the vertex color?]
+- [x] vertex alpha (used with the alpha of the vertex color)
 - [;] multiple textures (vertex alpha and separate uv maps too) [add multiple uv maps]
 - [ ] convert panel classes to layout.panel
 - [ ] split up functions, classes, and files (sub property groups, sub panels, etc.)
