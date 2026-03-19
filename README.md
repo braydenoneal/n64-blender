@@ -1,8 +1,10 @@
 # N64 Blender
 
-Nintendo 64 based graphics in Blender.
+Custom model addon for Blender loosely based on Nintendo 64 graphics. Used to export a custom model format for [py64](https://github.com/braydenoneal/py64), a game engine loosely based on the Nintendo 64.
 
 Borrowed heavily from [Fast64](https://github.com/Fast-64/fast64).
+
+Use Fast64 for more accurate N64 models.
 
 Todo
 ====
