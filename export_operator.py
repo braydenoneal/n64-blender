@@ -96,10 +96,19 @@ def write_file(filepath):
                 j['solid_color'] = rgb(p.solid_color)
             else:
                 j['texture'] = {
-                    'name': '.'.join(p.texture.name.split('.')[:-1]),
+                    'name': p.texture.name,
                     'bounds': {'x': p.x_bounds, 'y': p.y_bounds},
                     'scale': {'x': p.x_scale, 'y': p.y_scale},
                     'shift': {'x': p.x_shift, 'y': p.y_shift},
+                }
+
+            if p.enable_texture_b:
+                j['texture_b'] = {
+                    'name': p.texture_b.name,
+                    'bounds': {'x': p.x_bounds_b, 'y': p.y_bounds_b},
+                    'scale': {'x': p.x_scale_b, 'y': p.y_scale_b},
+                    'shift': {'x': p.x_shift_b, 'y': p.y_shift_b},
+                    'mix': p.texture_mix,
                 }
 
             j['backface_culling'] = p.enable_backface_culling
@@ -116,16 +125,16 @@ def write_file(filepath):
                 j['overlay_color'] = rgb(p.overlay_color)
 
             if p.enable_ambient_color:
-                j['ambient_color'] = True if p.override_ambient_color == 'override' else rgb(p.ambient_color)
+                j['ambient_color'] = True if p.override_ambient_color != 'override' else rgb(p.ambient_color)
 
             if p.enable_light_color:
-                j['light_color'] = True if p.override_light_color == 'override' else {
+                j['light_color'] = True if p.override_light_color != 'override' else {
                     'color': rgb(p.light_color),
                     'direction': xyz(p.light_direction),
                 }
 
             if p.enable_fog:
-                j['fog'] = True if p.override_fog == 'override' else {
+                j['fog'] = True if p.override_fog != 'override' else {
                     'start': p.fog_start,
                     'length': p.fog_length,
                     'color': rgb(p.fog_color),
@@ -234,7 +243,7 @@ class ExportSomeData(Operator, ExportHelper):
         return write_file(self.filepath)
 
 
-def menu_func_export(self, context):
+def menu_func_export(self, _):
     self.layout.operator(ExportSomeData.bl_idname, text="4B Materials model (.json)")
 
 
