@@ -1,4 +1,5 @@
 import json
+import math
 from typing import Any
 
 import bpy
@@ -33,7 +34,48 @@ def xyz(obj_color):
 
 
 def write_file(filepath):
-    scene_materials = {}
+    scene = bpy.context.scene
+
+    bones = {}
+
+    for ob in scene.objects:
+        if ob.type != 'ARMATURE':
+            continue
+
+        for bone in ob.data.bones:
+            bones[bone.name] = {
+                'parent': bone.parent.name,
+            } if bone.parent is not None else {}
+
+            bones[bone.name] |= {
+                'head': bone.head[:3],
+                'tail': bone.tail[:3],
+                'frames': [],
+            }
+
+        for curve in ob.animation_data.action.fcurves:
+            if not curve.data_path.startswith('pose.bones['):
+                continue
+
+            bone_name = curve.data_path.split('"')[1]
+
+            if bone_name not in bones.keys():
+                continue
+
+            frames = [frame['frame'] for frame in bones[bone_name]['frames']]
+
+            for index, keyframe in curve.keyframe_points.items():
+                frame = keyframe.co.x
+
+                if frame not in frames:
+                    scene.frame_set(math.floor(frame), subframe=frame % 1)
+
+                    bones[bone_name]['frames'].append({
+                        'frame': frame,
+                        'rotation': ob.pose.bones[bone_name].rotation_quaternion[:],
+                    })
+
+    materials = {}
 
     for ob in bpy.context.scene.objects:
         if ob.type != 'MESH':
@@ -44,7 +86,7 @@ def write_file(filepath):
         for slot in ob.material_slots:
             material_slots.append(slot.name)
 
-            if not slot.material.is_4b or slot.name in scene_materials.keys():
+            if not slot.material.is_4b or slot.name in materials.keys():
                 continue
 
             p = slot.material.props_4b
@@ -91,7 +133,7 @@ def write_file(filepath):
 
             j['faces'] = []
 
-            scene_materials[slot.name] = j
+            materials[slot.name] = j
 
         vertices = ob.data.vertices
         uvs = ob.data.uv_layers['UVMap'].data
@@ -107,10 +149,10 @@ def write_file(filepath):
 
             material_name = material_slots[face.material_index]
 
-            if material_name not in scene_materials.keys():
+            if material_name not in materials.keys():
                 continue
 
-            material = scene_materials[material_name]
+            material = materials[material_name]
             face_json = {}
 
             for vertex_name, vertex_index, loop_index in zip(('a', 'b', 'c'), face.vertices, face.loop_indices):
@@ -134,6 +176,25 @@ def write_file(filepath):
                     else:
                         vertex_json['color'] = rgb(color[loop_index].color)
 
+                weights = []
+
+                for group in vertices[vertex_index].groups:
+                    name = ob.vertex_groups[group.group].name
+
+                    if name not in bones.keys():
+                        continue
+
+                    if len(weights) >= 4:
+                        break
+
+                    weights.append({
+                        'bone': name,
+                        'weight': group.weight
+                    })
+
+                if len(weights) > 0:
+                    vertex_json['weights'] = weights
+
                 face_json[vertex_name] = vertex_json
 
             normal = face.normal
@@ -145,8 +206,15 @@ def write_file(filepath):
 
             material['faces'].append(face_json)
 
+    json_data = {
+        'materials': materials,
+    }
+
+    if bones:
+        json_data['bones'] = bones
+
     with open(filepath, 'w') as file:
-        file.write(json.dumps(scene_materials, indent=2))
+        file.write(json.dumps(json_data, indent=2))
 
     return {'FINISHED'}
 
