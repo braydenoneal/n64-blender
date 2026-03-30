@@ -8,31 +8,6 @@ from bpy.types import Operator
 from bpy_extras.io_utils import ExportHelper
 
 
-def rgb(obj_color):
-    return {
-        'r': obj_color[0],
-        'g': obj_color[1],
-        'b': obj_color[2],
-    }
-
-
-def rgba(obj_color):
-    return {
-        'r': obj_color[0],
-        'g': obj_color[1],
-        'b': obj_color[2],
-        'a': obj_color[3],
-    }
-
-
-def xyz(obj_color):
-    return {
-        'x': obj_color[0],
-        'y': obj_color[1],
-        'z': obj_color[2],
-    }
-
-
 def write_file(filepath):
     scene = bpy.context.scene
 
@@ -47,9 +22,10 @@ def write_file(filepath):
                 'parent': bone.parent.name,
             } if bone.parent is not None else {}
 
+            head = bone.head_local - ob.location
+
             bones[bone.name] |= {
-                'head': bone.head[:3],
-                'tail': bone.tail[:3],
+                'head': [head[:3]],
                 'frames': [],
             }
 
@@ -75,93 +51,18 @@ def write_file(filepath):
                         'rotation': ob.pose.bones[bone_name].rotation_quaternion[:],
                     })
 
-    materials = {}
+    faces = []
 
-    for ob in bpy.context.scene.objects:
+    for ob in scene.objects:
         if ob.type != 'MESH':
             continue
 
-        material_slots = []
-
-        for slot in ob.material_slots:
-            material_slots.append(slot.name)
-
-            if not slot.material.is_4b or slot.name in materials.keys():
-                continue
-
-            p = slot.material.props_4b
-            j = {}
-
-            if p.enable_solid_color:
-                j['solid_color'] = rgb(p.solid_color)
-            else:
-                j['texture'] = {
-                    'name': p.texture.name,
-                    'bounds': {'x': p.x_bounds, 'y': p.y_bounds},
-                    'scale': {'x': p.x_scale, 'y': p.y_scale},
-                    'shift': {'x': p.x_shift, 'y': p.y_shift},
-                }
-
-            if p.enable_texture_b:
-                j['texture_b'] = {
-                    'name': p.texture_b.name,
-                    'bounds': {'x': p.x_bounds_b, 'y': p.y_bounds_b},
-                    'scale': {'x': p.x_scale_b, 'y': p.y_scale_b},
-                    'shift': {'x': p.x_shift_b, 'y': p.y_shift_b},
-                    'mix': p.texture_mix,
-                }
-
-            j['backface_culling'] = p.enable_backface_culling
-
-            if p.enable_transparency:
-                j['transparency'] = {
-                    'mode': p.transparency_mode,
-                    'translucency': p.translucency,
-                }
-
-            j['vertex_colors'] = p.enable_vertex_colors
-
-            if p.enable_overlay_color:
-                j['overlay_color'] = rgb(p.overlay_color)
-
-            if p.enable_ambient_color:
-                j['ambient_color'] = True if p.override_ambient_color != 'override' else rgb(p.ambient_color)
-
-            if p.enable_light_color:
-                j['light_color'] = True if p.override_light_color != 'override' else {
-                    'color': rgb(p.light_color),
-                    'direction': xyz(p.light_direction),
-                }
-
-            if p.enable_fog:
-                j['fog'] = True if p.override_fog != 'override' else {
-                    'start': p.fog_start,
-                    'length': p.fog_length,
-                    'color': rgb(p.fog_color),
-                }
-
-            j['faces'] = []
-
-            materials[slot.name] = j
-
         vertices = ob.data.vertices
-        uvs = ob.data.uv_layers['UVMap'].data
-
-        if 'Color' not in ob.data.color_attributes.keys():
-            continue
-
-        color = ob.data.color_attributes['Color'].data
 
         for face in ob.data.polygons:
             if len(face.vertices) != 3:
                 continue
 
-            material_name = material_slots[face.material_index]
-
-            if material_name not in materials.keys():
-                continue
-
-            material = materials[material_name]
             face_json = {}
 
             for vertex_name, vertex_index, loop_index in zip(('a', 'b', 'c'), face.vertices, face.loop_indices):
@@ -172,18 +73,6 @@ def write_file(filepath):
                     'y': vertex.y,
                     'z': vertex.z,
                 }
-
-                if 'texture' in material.keys():
-                    uv = uvs[loop_index].uv
-
-                    vertex_json['u'] = uv.x
-                    vertex_json['v'] = uv.y
-
-                if material['vertex_colors']:
-                    if 'transparency' in material.keys():
-                        vertex_json['color'] = rgba(color[loop_index].color)
-                    else:
-                        vertex_json['color'] = rgb(color[loop_index].color)
 
                 weights = []
 
@@ -207,20 +96,19 @@ def write_file(filepath):
                 face_json[vertex_name] = vertex_json
 
             normal = face.normal
+
             face_json['normal'] = {
                 'x': normal.x,
                 'y': normal.y,
                 'z': normal.z,
             }
 
-            material['faces'].append(face_json)
+            faces.append(face_json)
 
     json_data = {
-        'materials': materials,
+        'faces': faces,
+        'bones': bones,
     }
-
-    if bones:
-        json_data['bones'] = bones
 
     with open(filepath, 'w') as file:
         file.write(json.dumps(json_data, indent=2))
