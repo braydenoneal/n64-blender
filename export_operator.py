@@ -3,6 +3,7 @@ import math
 from typing import Any
 
 import bpy
+import mathutils
 from bpy.props import StringProperty
 from bpy.types import Operator
 from bpy_extras.io_utils import ExportHelper
@@ -46,9 +47,21 @@ def write_file(filepath):
                 if frame not in frames:
                     scene.frame_set(math.floor(frame), subframe=frame % 1)
 
+                    bone = ob.data.bones[bone_name]
+                    i = mathutils.Matrix.Identity(4)
+                    i[0][0:3] = bone.matrix[0]
+                    i[1][0:3] = bone.matrix[1]
+                    i[2][0:3] = bone.matrix[2]
+
+                    pose_bone = ob.pose.bones[bone_name]
+                    matrix = pose_bone.matrix
+
+                    if pose_bone.parent is not None:
+                        matrix = i.inverted() @ pose_bone.parent.matrix.inverted() @ pose_bone.matrix
+
                     bones[bone_name]['frames'].append({
                         'frame': frame,
-                        'rotation': ob.pose.bones[bone_name].rotation_quaternion[:],
+                        'matrix': [row[:] for row in matrix[:]],
                     })
 
     faces = []
