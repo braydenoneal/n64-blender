@@ -52,29 +52,14 @@ def write_file(filepath):
                     scene.frame_set(math.floor(frame), subframe=frame % 1)
                     pose_bone = ob.pose.bones[bone_name]
 
-                    # axis, roll = pose_bone.bone.AxisRollFromMatrix(pose_bone.matrix.to_3x3())
-                    # roll_matrix = Matrix.Rotation(roll, 4, axis)
-                    # print(pose_bone.matrix_channel)
-                    # matrix = pose_bone.matrix_channel @ roll_matrix
-                    # print(matrix)
-                    #
-                    # matrix = pose_bone.bone.matrix.to_4x4().inverted() @ pose_bone.matrix
-                    # matrix = pose_bone.bone.matrix_local.inverted() @ pose_bone.matrix
-                    # matrix = pose_bone.matrix_basis  # _channel
-
-                    matrix_channel_no_parent = pose_bone.matrix_channel
+                    matrix = pose_bone.matrix_channel
 
                     if pose_bone.parent is not None:
-                        matrix_channel_no_parent = pose_bone.parent.matrix_channel.inverted() @ matrix_channel_no_parent
+                        matrix = pose_bone.parent.matrix_channel.inverted() @ matrix
 
                     bones[bone_name]['frames'].append({
                         'frame': frame,
-                        'matrix': matrix_to_glm(pose_bone.matrix),
-                        'matrix_basis': matrix_to_glm(pose_bone.matrix_basis),
-                        'matrix_channel': matrix_to_glm(pose_bone.matrix_channel),
-                        'matrix_channel_no_parent': matrix_to_glm(matrix_channel_no_parent),
-                        'bone_matrix': matrix_to_glm(pose_bone.bone.matrix),
-                        'bone_matrix_local': matrix_to_glm(pose_bone.bone.matrix_local),
+                        'matrix': matrix_to_glm(matrix),
                     })
 
     faces = []
