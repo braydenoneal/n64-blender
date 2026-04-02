@@ -3,10 +3,14 @@ import math
 from typing import Any
 
 import bpy
-import mathutils
 from bpy.props import StringProperty
 from bpy.types import Operator
 from bpy_extras.io_utils import ExportHelper
+from mathutils import Matrix
+
+
+def matrix_to_glm(matrix: Matrix):
+    return [col[:] for col in matrix.col]
 
 
 def write_file(filepath):
@@ -46,22 +50,31 @@ def write_file(filepath):
 
                 if frame not in frames:
                     scene.frame_set(math.floor(frame), subframe=frame % 1)
-
-                    bone = ob.data.bones[bone_name]
-                    i = mathutils.Matrix.Identity(4)
-                    i[0][0:3] = bone.matrix[0]
-                    i[1][0:3] = bone.matrix[1]
-                    i[2][0:3] = bone.matrix[2]
-
                     pose_bone = ob.pose.bones[bone_name]
-                    matrix = pose_bone.matrix
+
+                    # axis, roll = pose_bone.bone.AxisRollFromMatrix(pose_bone.matrix.to_3x3())
+                    # roll_matrix = Matrix.Rotation(roll, 4, axis)
+                    # print(pose_bone.matrix_channel)
+                    # matrix = pose_bone.matrix_channel @ roll_matrix
+                    # print(matrix)
+                    #
+                    # matrix = pose_bone.bone.matrix.to_4x4().inverted() @ pose_bone.matrix
+                    # matrix = pose_bone.bone.matrix_local.inverted() @ pose_bone.matrix
+                    # matrix = pose_bone.matrix_basis  # _channel
+
+                    matrix_channel_no_parent = pose_bone.matrix_channel
 
                     if pose_bone.parent is not None:
-                        matrix = i.inverted() @ pose_bone.parent.matrix.inverted() @ pose_bone.matrix
+                        matrix_channel_no_parent = pose_bone.parent.matrix_channel.inverted() @ matrix_channel_no_parent
 
                     bones[bone_name]['frames'].append({
                         'frame': frame,
-                        'matrix': [row[:] for row in matrix[:]],
+                        'matrix': matrix_to_glm(pose_bone.matrix),
+                        'matrix_basis': matrix_to_glm(pose_bone.matrix_basis),
+                        'matrix_channel': matrix_to_glm(pose_bone.matrix_channel),
+                        'matrix_channel_no_parent': matrix_to_glm(matrix_channel_no_parent),
+                        'bone_matrix': matrix_to_glm(pose_bone.bone.matrix),
+                        'bone_matrix_local': matrix_to_glm(pose_bone.bone.matrix_local),
                     })
 
     faces = []
