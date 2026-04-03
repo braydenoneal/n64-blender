@@ -28,9 +28,11 @@ def write_file(filepath):
             } if bone.parent is not None else {}
 
             head = bone.head_local - ob.location
+            tail = bone.tail_local - ob.location
 
             bones[bone.name] |= {
                 'head': [head[:3]],
+                'tail': [tail[:3]],
                 'frames': [],
             }
 
