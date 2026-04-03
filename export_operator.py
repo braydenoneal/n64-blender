@@ -61,7 +61,7 @@ def write_file(filepath):
 
                     bones[bone_name]['frames'].append({
                         'frame': frame,
-                        'matrix': matrix_to_glm(matrix),
+                        'matrix': matrix_to_glm(matrix.to_3x3()),
                     })
 
     faces = []
