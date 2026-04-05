@@ -33,41 +33,53 @@ def write_file(filepath):
             bones[bone.name] |= {
                 'head': [head[:3]],
                 'tail': [tail[:3]],
-                'frames': [],
+                'frames': {},
             }
 
-        for curve in ob.animation_data.action.fcurves:
-            if not curve.data_path.startswith('pose.bones['):
-                continue
+        prev_action = ob.animation_data.action
+        prev_frame = scene.frame_current_final
 
-            bone_name = curve.data_path.split('"')[1]
+        for action in bpy.data.actions:
+            ob.animation_data.action = action
 
-            if bone_name not in bones.keys():
-                continue
+            for curve in action.fcurves:
+                if not curve.data_path.startswith('pose.bones['):
+                    continue
 
-            frames = [frame['frame'] for frame in bones[bone_name]['frames']]
+                bone_name = curve.data_path.split('"')[1]
 
-            for index, keyframe in curve.keyframe_points.items():
-                frame = keyframe.co.x
+                if bone_name not in bones.keys():
+                    continue
 
-                if frame not in frames:
-                    scene.frame_set(math.floor(frame), subframe=frame % 1)
-                    pose_bone = ob.pose.bones[bone_name]
+                if action.name not in bones[bone_name]['frames']:
+                    bones[bone_name]['frames'][action.name] = []
 
-                    matrix = pose_bone.matrix_channel
+                frames = [frame['frame'] for frame in bones[bone_name]['frames'][action.name]]
 
-                    if pose_bone.parent is not None:
-                        matrix = pose_bone.parent.matrix_channel.inverted() @ matrix
+                for index, keyframe in curve.keyframe_points.items():
+                    frame = keyframe.co.x
 
-                    bones[bone_name]['frames'].append({
-                        'frame': frame,
-                        'matrix': matrix_to_glm(matrix.to_3x3()),
-                        'translation': {
-                            'x': pose_bone.location.x,
-                            'y': pose_bone.location.y,
-                            'z': pose_bone.location.z,
-                        }
-                    })
+                    if frame not in frames:
+                        scene.frame_set(math.floor(frame), subframe=frame % 1)
+                        pose_bone = ob.pose.bones[bone_name]
+
+                        matrix = pose_bone.matrix_channel
+
+                        if pose_bone.parent is not None:
+                            matrix = pose_bone.parent.matrix_channel.inverted() @ matrix
+
+                        bones[bone_name]['frames'][action.name].append({
+                            'frame': frame,
+                            'matrix': matrix_to_glm(matrix.to_3x3()),
+                            'translation': {
+                                'x': pose_bone.location.x,
+                                'y': pose_bone.location.y,
+                                'z': pose_bone.location.z,
+                            }
+                        })
+
+        ob.animation_data.action = prev_action
+        scene.frame_set(math.floor(prev_frame), subframe=prev_frame % 1)
 
     faces = []
 
