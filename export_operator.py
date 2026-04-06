@@ -6,11 +6,19 @@ import bpy
 from bpy.props import StringProperty
 from bpy.types import Operator
 from bpy_extras.io_utils import ExportHelper
-from mathutils import Matrix
+from mathutils import Matrix, Vector
 
 
-def matrix_to_glm(matrix: Matrix):
-    return [col[:] for col in matrix.col]
+def z_up_to_y_up(item: Vector | Matrix):
+    return item @ Matrix.Rotation(math.radians(90), 4, (1, 0, 0))
+
+
+def vec3(vector: Vector, apply_z_up_to_y_up: bool = True):
+    return (z_up_to_y_up(vector) if apply_z_up_to_y_up else vector)[:3]
+
+
+def mat3(matrix: Matrix):
+    return [col[:] for col in matrix.to_3x3().col]
 
 
 def write_file(filepath):
@@ -31,8 +39,8 @@ def write_file(filepath):
             tail = bone.tail_local - ob.location
 
             bones[bone.name] |= {
-                'head': [head[:3]],
-                'tail': [tail[:3]],
+                'head': vec3(head),
+                'tail': vec3(tail),
                 'frames': {},
             }
 
@@ -66,16 +74,12 @@ def write_file(filepath):
                         matrix = pose_bone.matrix_channel
 
                         if pose_bone.parent is not None:
-                            matrix = pose_bone.parent.matrix_channel.inverted() @ matrix
+                            matrix = z_up_to_y_up(pose_bone.parent.matrix_channel).inverted() @ z_up_to_y_up(matrix)
 
                         bones[bone_name]['frames'][action.name].append({
                             'frame': frame,
-                            'matrix': matrix_to_glm(matrix.to_3x3()),
-                            'translation': {
-                                'x': pose_bone.location.x,
-                                'y': pose_bone.location.y,
-                                'z': pose_bone.location.z,
-                            }
+                            'matrix': mat3(matrix),
+                            'translation': vec3(pose_bone.location, False)
                         })
 
         ob.animation_data.action = prev_action
@@ -99,9 +103,7 @@ def write_file(filepath):
                 vertex = vertices[vertex_index].co
 
                 vertex_json: dict[str, Any] = {
-                    'x': vertex.x,
-                    'y': vertex.y,
-                    'z': vertex.z,
+                    'vertex': vec3(vertex)
                 }
 
                 weights = []
@@ -127,11 +129,7 @@ def write_file(filepath):
 
             normal = face.normal
 
-            face_json['normal'] = {
-                'x': normal.x,
-                'y': normal.y,
-                'z': normal.z,
-            }
+            face_json['normal'] = vec3(normal)
 
             faces.append(face_json)
 
