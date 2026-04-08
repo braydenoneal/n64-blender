@@ -186,11 +186,14 @@ def write_file(filepath):
             face_json = {}
 
             for vertex_name, vertex_index, loop_index in zip(('a', 'b', 'c'), face.vertices, face.loop_indices):
-                vertex = vertices[vertex_index].co
+                vertex = vertices[vertex_index]
 
                 vertex_json: dict[str, Any] = {
-                    'vertex': vec3(vertex)
+                    'vertex': vec3(vertex.co),
                 }
+
+                if face.use_smooth:
+                    vertex_json['normal'] = vec3(vertex.normal)
 
                 if 'texture' in material.keys():
                     uv = uvs[loop_index].uv
@@ -225,7 +228,8 @@ def write_file(filepath):
 
                 face_json[vertex_name] = vertex_json
 
-            face_json['normal'] = vec3(face.normal)
+            if not face.use_smooth:
+                face_json['normal'] = vec3(face.normal)
 
             material['faces'].append(face_json)
 
