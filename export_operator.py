@@ -78,20 +78,22 @@ def write_file(filepath):
                 for index, keyframe in curve.keyframe_points.items():
                     frame = keyframe.co.x
 
-                    if frame not in frames:
-                        scene.frame_set(math.floor(frame), subframe=frame % 1)
-                        pose_bone = ob.pose.bones[bone_name]
+                    if frame in frames:
+                        continue
 
-                        matrix = pose_bone.matrix_channel
+                    scene.frame_set(math.floor(frame), subframe=frame % 1)
+                    pose_bone = ob.pose.bones[bone_name]
 
-                        if pose_bone.parent is not None:
-                            matrix = z_up_to_y_up(pose_bone.parent.matrix_channel).inverted() @ z_up_to_y_up(matrix)
+                    matrix = z_up_to_y_up(pose_bone.matrix_channel)
 
-                        bones[bone_name]['frames'][action.name].append({
-                            'frame': frame,
-                            'matrix': mat3(matrix),
-                            'translation': vec3(pose_bone.location, False)
-                        })
+                    if pose_bone.parent is not None:
+                        matrix = z_up_to_y_up(pose_bone.parent.matrix_channel).inverted() @ matrix
+
+                    bones[bone_name]['frames'][action.name].append({
+                        'frame': frame,
+                        'matrix': mat3(matrix),
+                        'translation': vec3(pose_bone.location, False)
+                    })
 
         ob.animation_data.action = prev_action
         scene.frame_set(math.floor(prev_frame), subframe=prev_frame % 1)
