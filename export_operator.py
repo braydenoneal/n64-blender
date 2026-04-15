@@ -74,6 +74,7 @@ def write_file(filepath):
                     bones[bone_name]['frames'][action.name] = []
 
                 frames = [frame['frame'] for frame in bones[bone_name]['frames'][action.name]]
+                pose_bone = ob.pose.bones[bone_name]
 
                 for index, keyframe in curve.keyframe_points.items():
                     frame = keyframe.co.x
@@ -82,12 +83,11 @@ def write_file(filepath):
                         continue
 
                     scene.frame_set(math.floor(frame), subframe=frame % 1)
-                    pose_bone = ob.pose.bones[bone_name]
 
-                    matrix = z_up_to_y_up(pose_bone.matrix_channel)
+                    matrix = pose_bone.matrix_channel
 
                     if pose_bone.parent is not None:
-                        matrix = z_up_to_y_up(pose_bone.parent.matrix_channel).inverted() @ matrix
+                        matrix = z_up_to_y_up(pose_bone.parent.matrix_channel).inverted() @ z_up_to_y_up(matrix)
 
                     bones[bone_name]['frames'][action.name].append({
                         'frame': frame,
