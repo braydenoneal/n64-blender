@@ -6,6 +6,8 @@ Borrowed heavily from [Fast64](https://github.com/Fast-64/fast64).
 
 Use Fast64 for more accurate N64 models.
 
+https://github.com/user-attachments/assets/1371ff71-05ae-4ff6-88a5-faff7482e66d
+
 Todo
 ====
 
